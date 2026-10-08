@@ -1,41 +1,32 @@
-"""Compose the comicsol-studio interface on top of the comic-sol-web application.
-
-The interface owns no API, session, or project logic. It is mounted beside the
-unchanged comic-sol-web routes on the same origin, so the browser keeps using
-the backend's CSRF cookie, revision guards, and its published `/static` browser
-client (`api.js`, `state.js`, `webmcp.js`).
-"""
+"""Build the Studio application: API, landing page, console, and static assets."""
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from comic_sol_web.app import STATIC_DIR, create_app
-from comic_sol_web.config import WebConfig
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from starlette.types import Scope
 
-UI_DIR = Path(__file__).resolve().parent / "ui"
-UI_PATH = "/studio"
+from comicsol_studio import __version__
+from comicsol_studio.api import router
+from comicsol_studio.config import StudioConfig
+from comicsol_studio.errors import StudioError, error_response
+from comicsol_studio.providers import Providers
+from comicsol_studio.security import CsrfTokens, HostGuard
+from comicsol_studio.service import Studio
 
-# Browser modules the interface imports from the backend's static mount. The
-# launcher refuses to start when the installed comic-sol-web lacks one of them.
-BACKEND_MODULES = ("api.js", "state.js", "webmcp.js")
-
-
-class MissingBackendModuleError(RuntimeError):
-    """The installed comic-sol-web does not publish a required browser module."""
+WEB_DIR = Path(__file__).resolve().parent / "web"
+CONSOLE_PATH = "/studio"
 
 
 class RevalidatedStaticFiles(StaticFiles):
-    """Serve the interface so browsers revalidate every module.
-
-    Without an explicit policy a browser may run a heuristically cached older
-    module beside newer ones after an upgrade. `no-cache` keeps ETag 304s cheap.
-    """
+    """Serve assets so browsers revalidate every module (cheap ETag 304s after an upgrade)."""
 
     async def get_response(self, path: str, scope: Scope) -> Response:
         response = await super().get_response(path, scope)
@@ -43,25 +34,63 @@ class RevalidatedStaticFiles(StaticFiles):
         return response
 
 
-def missing_backend_modules(static_dir: Path = STATIC_DIR) -> tuple[str, ...]:
-    return tuple(name for name in BACKEND_MODULES if not (static_dir / name).is_file())
+def _page(name: str) -> FileResponse:
+    response = FileResponse(WEB_DIR / name, media_type="text/html")
+    response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
-def create_studio_app(
-    config: WebConfig,
-    *,
-    active_agent_image_capabilities: frozenset[str] = frozenset(),
-) -> FastAPI:
-    missing = missing_backend_modules()
-    if missing:
-        raise MissingBackendModuleError(
-            "comic-sol-web is missing browser modules: " + ", ".join(missing)
-        )
-    app = create_app(config, active_agent_image_capabilities=active_agent_image_capabilities)
+def create_app(config: StudioConfig, *, providers: Providers | None = None) -> FastAPI:
+    studio = Studio(config, providers=providers)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        yield
+        studio.close()
+
+    app = FastAPI(
+        lifespan=lifespan,
+        title="Comic Sol Studio",
+        version=__version__,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
+    app.state.config = config
+    app.state.studio = studio
+    app.state.csrf = CsrfTokens(studio.store)
+
+    @app.exception_handler(StudioError)
+    async def studio_error(_: Request, error: StudioError) -> Response:
+        return error_response(error.status, error.code, error.message, error.hint, error.details)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(_: Request, error: RequestValidationError) -> Response:
+        details = [
+            ".".join(str(part) for part in item.get("loc", ())) + ": " + str(item.get("msg"))
+            for item in error.errors()[:10]
+        ]
+        return error_response(422, "invalid_request", "Studio could not read that request.", None, details)
+
+    @app.get("/healthz", include_in_schema=False)
+    def healthz() -> dict[str, str]:
+        return {"status": "ok"}
+
+    app.include_router(router)
 
     @app.get("/", include_in_schema=False)
-    def studio_root() -> RedirectResponse:
-        return RedirectResponse(f"{UI_PATH}/", status_code=307)
+    def landing() -> FileResponse:
+        return _page("index.html")
 
-    app.mount(UI_PATH, RevalidatedStaticFiles(directory=str(UI_DIR), html=True), name="comicsol-studio")
+    @app.get(CONSOLE_PATH, include_in_schema=False)
+    def console_redirect() -> RedirectResponse:
+        return RedirectResponse(f"{CONSOLE_PATH}/", status_code=307)
+
+    @app.get(CONSOLE_PATH + "/{route:path}", include_in_schema=False)
+    def console(route: str) -> FileResponse:
+        del route  # client-side routes all load the same console shell
+        return _page("studio.html")
+
+    app.mount("/assets", RevalidatedStaticFiles(directory=str(WEB_DIR / "assets")), name="assets")
+    app.add_middleware(HostGuard, allowed_hosts=config.allowed_hosts())
     return app

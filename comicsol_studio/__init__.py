@@ -1,3 +1,3 @@
-"""comicsol-studio: a new creator interface for the comic-sol-web API."""
+"""Comic Sol Studio: a full-stack creator application built directly on the Comic Sol engine."""
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"

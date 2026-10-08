@@ -5,12 +5,19 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "comicsol-studio"
 dynamic = ["version"]
-description = "A creator-first Comic Sol Studio interface served on top of the comic-sol-web API"
+description = "A full-stack creator application built directly on the Comic Sol engine"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "Alwan Juliawan" }]
 dependencies = [
-    "comic-sol-web==0.1.0",
+    "comic-sol @ git+https://github.com/wenn-id/comicsol@7c0138df6030c4c4105533d05ed43affb33bad2d",
+    "anthropic==1.12.1",
+    "fastapi==0.141.1",
+    "httpx==0.28.1",
+    "pillow==12.3.0",
+    "python-multipart==0.0.32",
+    "starlette==1.6.0",
+    "uvicorn==0.35.0",
 ]
 
 [project.scripts]
@@ -24,12 +31,22 @@ include = ["comicsol_studio*"]
 
 [tool.setuptools.package-data]
 comicsol_studio = [
-    "ui/index.html",
-    "ui/css/*.css",
-    "ui/js/*.js",
-    "ui/js/views/*.js",
-    "ui/fonts/Archivo-Variable.ttf",
-    "ui/fonts/OFL-Archivo.txt",
-    "ui/fonts/ComicNeue-Bold.ttf",
-    "ui/fonts/OFL-ComicNeue.txt",
+    "web/*.html",
+    "web/assets/css/*.css",
+    "web/assets/js/*.js",
+    "web/assets/js/*/*.js",
+    "web/assets/vendor/*.js",
+    "web/assets/vendor/*.txt",
+    "web/assets/fonts/*.woff2",
+    "web/assets/fonts/*.ttf",
+    "web/assets/fonts/*.txt",
+    "web/assets/img/*.svg",
+    "web/assets/img/*.webp",
 ]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
