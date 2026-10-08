@@ -12,3 +12,4 @@ LICENSE text eol=lf
 *.ttf binary
 *.woff2 binary
 *.svg text eol=lf
+*.yml text eol=lf
