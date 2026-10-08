@@ -382,6 +382,7 @@
 
 .form-grid {
   display: grid;
+  align-items: start;
   gap: 18px;
 }
 .form-grid--two {
