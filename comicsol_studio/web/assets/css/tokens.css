@@ -1,0 +1,163 @@
+/* Comic Sol Studio design tokens, shared by the landing page and the console.
+   Obsidian and amber are the owner's palette; ivory is the paper the comics print on. */
+
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../fonts/InstrumentSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../fonts/InstrumentSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("../fonts/Manrope-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Comic Neue";
+  src: url("../fonts/ComicNeue-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  --obsidian: #08090b;
+  --ink-1: #0e0f12;
+  --ink-2: #14161a;
+  --ink-3: #1c1f25;
+  --ink-4: #262a31;
+  --line: rgba(238, 231, 216, 0.09);
+  --line-strong: rgba(238, 231, 216, 0.18);
+
+  --ivory: #eee7d8;
+  --ivory-2: #bdb6a8;
+  --ivory-3: #8f897e;
+
+  --amber: #d9a441;
+  --amber-hi: #e9bb5e;
+  --amber-lo: #a57a2a;
+  --amber-wash: rgba(217, 164, 65, 0.12);
+  --amber-text: #e2b15a;
+  --on-amber: #1a1307;
+
+  --sage: #93c3a0;
+  --sage-wash: rgba(147, 195, 160, 0.12);
+  --ember: #e98a6f;
+  --ember-wash: rgba(233, 138, 111, 0.12);
+
+  --paper: #f3eee3;
+  --paper-ink: #16140f;
+
+  --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --comic: "Comic Neue", "Comic Sans MS", cursive;
+
+  --r1: 6px;
+  --r2: 10px;
+  --r3: 18px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --focus: 0 0 0 2px var(--obsidian), 0 0 0 4px var(--amber);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--obsidian);
+  color: var(--ivory);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  font-feature-settings: "ss01", "tnum" 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--on-amber);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--r1);
+  background: var(--amber);
+  color: var(--on-amber);
+  font-weight: 700;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

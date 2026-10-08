@@ -73,6 +73,13 @@ def session(request: Request) -> JSONResponse:
     return response
 
 
+@router.get("/engine")
+def engine_info(request: Request) -> JSONResponse:
+    """Public engine facts (version, page size, layouts) for the landing page."""
+    capabilities = studio(request).capabilities()
+    return _json({key: capabilities[key] for key in ("engine", "page", "layouts")})
+
+
 @router.get("/starters")
 def starters(request: Request) -> JSONResponse:
     return _json(studio(request).starters())
