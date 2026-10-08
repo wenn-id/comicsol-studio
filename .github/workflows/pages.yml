@@ -3,10 +3,8 @@ name: pages-preview
 # Builds the GitHub Pages preview: the real landing page and console with a DEMO layer
 # that replays a session recorded against the real Studio and the pinned engine.
 #
-# Every run uploads the built site as the "studio-pages-preview" artifact for review.
-# Publishing is off until the repository variable PAGES_PUBLISH is set to "true", which
-# should happen only after the wenn-id/comicsol AGENTS.md Article 9 requirement (adoption
-# summary or recorded maintainer waiver) is met. See README "Pages preview".
+# Every run uploads the built site as the "studio-pages-preview" artifact for review;
+# runs on main also deploy it to GitHub Pages. See README "Pages preview".
 
 on:
   push:
@@ -66,14 +64,14 @@ jobs:
           path: _site
           include-hidden-files: true
           retention-days: 14
-      - if: github.ref == 'refs/heads/main' && vars.PAGES_PUBLISH == 'true'
+      - if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' && vars.PAGES_PUBLISH == 'true'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       pages: write

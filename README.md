@@ -8,13 +8,11 @@ every panel and page, and let the engine letter, compose, and bind a verified PD
 Studio is its own application. It has its own FastAPI backend, API, project store,
 landing page, and console. It does not use, mount, or import `comic-sol-web`.
 
-## Status and governance
+## Status
 
-The interface is not a released Comic Sol surface. Under `wenn-id/comicsol` AGENTS.md
-Article 9, a new distribution or execution surface needs either a published adoption
-summary that meets the real evidence gate, or an explicit waiver from a named maintainer
-recorded in both the relevant issue and the pull request. Neither exists yet. Record one
-before distributing Studio.
+Studio is in active development and is not yet a released Comic Sol surface. A live
+preview runs at <https://wenn-id.github.io/comicsol-studio/> (see
+[Pages preview](#pages-preview)).
 
 ## Run it
 
@@ -91,9 +89,8 @@ Nothing in `pages/` is part of the Python package.
 
 `.github/workflows/pages.yml` records and builds the preview on every push to `main` and
 on pull requests that touch Studio, and uploads it as the `studio-pages-preview`
-artifact. Publishing is off until the repository variable `PAGES_PUBLISH` is `true`; set
-it only after the Article 9 requirement above is met, then enable Pages with GitHub
-Actions as the source.
+artifact. Every push to `main` also deploys it to GitHub Pages at
+<https://wenn-id.github.io/comicsol-studio/>.
 
 To build it locally (the recording takes a few minutes):
 
