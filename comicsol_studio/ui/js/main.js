@@ -78,45 +78,45 @@ function planReady(state) {
   return PLAN_KEYS.some((key) => !documentIsBlank(key, parseDocument(state.workingPlan?.[key])));
 }
 
+// Each stage reports a short status and a tone. The tone drives the dot in
+// the navigation: busy (work running), attention (needs the creator),
+// done, bad (failed or blocked), or idle.
+function status(text, tone = "idle") {
+  return Object.freeze({ text, tone });
+}
+
 function stageStatuses(state) {
   const project = state.project;
   if (!project) {
-    return { start: "Write the pitch", plan: "Needs a project", generate: "Needs a project", review: "Needs a project" };
+    const locked = status("Needs a project");
+    return { start: status("Write the pitch"), plan: locked, generate: locked, review: locked };
   }
-  let plan = planReady(state) ? "Plan on file" : "Edit the plan";
-  if (state.draft) plan = state.draft.origin === "agent" ? "Agent draft waiting" : "Draft waiting";
-  else if (state.planning?.state === "queued" || state.planning?.state === "running") plan = "Planner drafting";
-  else if (state.planning?.state === "ready_for_review") plan = "Ready for review";
-  else if (state.planning?.state === "failed") plan = "Planning failed";
+  let plan = planReady(state) ? status("Plan on file", "done") : status("Edit the plan");
+  if (state.draft) plan = status(state.draft.origin === "agent" ? "Agent draft waiting" : "Draft waiting", "attention");
+  else if (state.planning?.state === "queued" || state.planning?.state === "running") plan = status("Planner drafting", "busy");
+  else if (state.planning?.state === "ready_for_review") plan = status("Ready for review", "attention");
+  else if (state.planning?.state === "failed") plan = status("Planning failed", "bad");
 
   const generation = state.generation;
   const loaded = generation.loadedRevision === project.revision;
-  let generate = state.workflow ? phaseLabel(state.workflow.phase) : "Open to check";
+  let generate = state.workflow ? status(phaseLabel(state.workflow.phase), "busy") : status("Open to check");
   if (loaded) {
     const lanes = groupJobs(generation.jobs, project.revision);
-    if (lanes.attention.length) generate = `${plural(lanes.attention.length, "job")} need you`;
-    else if (lanes.active.length) generate = `${lanes.active.length} rendering`;
-    else if (generation.accepted) generate = "Result accepted";
-    else if (!generation.jobs.length && !state.workflow) generate = "No jobs yet";
-    else if (!state.workflow) generate = `${plural(generation.jobs.length, "job")} on the board`;
+    if (lanes.attention.length) generate = status(`${plural(lanes.attention.length, "job")} need you`, "attention");
+    else if (lanes.active.length) generate = status(`${lanes.active.length} rendering`, "busy");
+    else if (generation.accepted) generate = status("Result accepted", "done");
+    else if (!generation.jobs.length && !state.workflow) generate = status("No jobs yet");
+    else if (!state.workflow) generate = status(`${plural(generation.jobs.length, "job")} on the board`);
   }
-  if (state.workflow?.state === "blocked") generate = "Workflow blocked";
+  if (state.workflow?.state === "blocked") generate = status("Workflow blocked", "bad");
+  if (state.workflow?.state === "complete") generate = status("Production complete", "done");
 
   const qa = generation.qa || project.summary?.qa;
-  let review = "Not reviewed";
-  if (qa) review = qa.valid ? "QA passed" : "QA findings";
-  else if (generation.accepted) review = "Result ready";
-  if (state.workflow?.state === "complete") review = "PDF ready";
-  return { start: "Project open", plan, generate, review };
-}
-
-function reachedStage(state) {
-  if (!state.project) return 0;
-  const qa = state.generation.qa || state.project.summary?.qa;
-  if (qa || state.generation.accepted || state.workflow?.state === "complete") return 3;
-  if (state.workflow || state.generation.jobs.length) return 2;
-  if (planReady(state)) return 1;
-  return 0;
+  let review = status("Not reviewed");
+  if (qa) review = qa.valid ? status("QA passed", "done") : status("QA findings", "attention");
+  else if (generation.accepted) review = status("Result ready", "attention");
+  if (state.workflow?.state === "complete") review = status("PDF ready", "done");
+  return { start: status("Project open", "done"), plan, generate, review };
 }
 
 function renderSlate(project) {
@@ -152,12 +152,10 @@ function renderChrome(state) {
     if (current) step.setAttribute("aria-current", "step");
     else step.removeAttribute("aria-current");
     step.disabled = view !== "start" && !state.project;
-    step.querySelector(".step-status").textContent = statuses[view];
+    step.querySelector(".step-status").textContent = statuses[view].text;
+    step.dataset.tone = statuses[view].tone;
+    step.title = statuses[view].text;
   }
-  const reached = reachedStage(state);
-  steps.forEach((step, index) => {
-    step.parentElement.dataset.reached = String(index < reached);
-  });
   renderSlate(state.project);
 }
 
@@ -185,7 +183,7 @@ function sync(state) {
 for (const step of steps) {
   step.addEventListener("click", () => navigate(step.dataset.view));
 }
-document.querySelector(".stage-track ol").addEventListener("keydown", (event) => {
+document.querySelector(".stage-nav ol").addEventListener("keydown", (event) => {
   if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
   const enabled = steps.filter((step) => !step.disabled);
   const position = enabled.indexOf(document.activeElement);

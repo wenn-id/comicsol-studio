@@ -142,7 +142,7 @@ export function mountReviewView({ store, announce, navigate }) {
         "div",
         {},
         h("p", { class: "eyebrow", text: "04 / Review" }),
-        h("h1", { text: "Check the pages" }),
+        h("h1", { class: "display display-md", text: "Check the pages" }),
         h("p", { class: "stage-lede", text: "Results stay exactly as the server stored them. This page never edits raster bytes." }),
       ),
       h("div", { class: "stage-tools" }, h("button", { type: "button", class: "button", on: { click: () => navigate("generate") } }, "Back to the render board")),

@@ -55,6 +55,15 @@ export function availableActions(job, revision) {
   return Object.freeze(actions);
 }
 
+// The queue is idempotent per revision: asking again for the same route can
+// return jobs that already ran or were cancelled. Only fresh work counts.
+export function queueOutcome(jobs) {
+  const all = Array.isArray(jobs) ? jobs : [];
+  const fresh = all.filter((job) => ACTIVE_STATES.has(job?.state) || isStaged(job));
+  const existingStates = [...new Set(all.filter((job) => !fresh.includes(job)).map((job) => displayState(job)))];
+  return Object.freeze({ fresh: fresh.length, existing: all.length - fresh.length, existingStates });
+}
+
 export function routeFingerprint(option, authMode) {
   if (!option || !authMode) return null;
   return `${option.provider}\u0000${option.model}\u0000${authMode}`;

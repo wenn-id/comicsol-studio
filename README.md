@@ -59,43 +59,58 @@ python -m unittest discover -s tests -p "test_*.py" -v
 
 | Stage | What it does |
 | --- | --- |
-| 01 Start | Pitch composer with a live 200 KB meter, page picker drawn as page sheets, language suggestions, and a planner picker that says which key is missing. Drag-and-drop archive import. |
-| 02 Plan | The four plan documents read as a story (beats as a four-panel strip), a cast, and real storyboard pages drawn from the engine's 1600 x 2400 panel rectangles. JSON editing with live validity, a line diff of formatted JSON before anything is saved, agent proposals as reviewable drafts, and production approval. |
-| 03 Generate | Route cards, a signed cost slate bound to the exact route, a phase pipeline with pause and resume, and a render board sorted into Needs you, In progress, Accepted, and History. |
+| 01 Create | A hero that fans out the engine's five real page layouts, and a prompt composer docked to the bottom of the screen: title, prompt or story mode, Pages, Language, and Planner chips, a live 200 KB meter, and archive import by picker or by dropping the file anywhere. A banner reopens the project already in progress. |
+| 02 Plan | The four plan documents read as a story (beats as a four-panel strip), a cast, and real storyboard pages drawn from the engine's 1600 x 2400 panel rectangles. JSON editing with live validity, a line diff of formatted JSON before anything is saved, agent proposals as reviewable drafts, and production approval. Unsaved edits surface as a floating action dock. |
+| 03 Generate | A render bar docked to the bottom: route and authentication chips and a cost confirmation bound to the exact route. When the idempotent queue hands back jobs that already ran, Studio says so instead of claiming new work. A phase pipeline with pause and resume, and a render board of media-style job cards sorted into Needs you, In progress, Accepted, and History. |
 | 04 Review | A light table for the accepted raster with a full-size viewer, staged promotion, QA findings grouped by panel and area, rerender, and private exports. |
 
-Across stages: a stage track that shows real progress, a production log of workflow
-events, a command palette (`Ctrl K`), focus mode for writing, day and night themes, and
-status messages that stay out of the way.
+Across stages: top navigation whose dots report each stage's real state, a production
+log drawer, a command palette (`Ctrl K`), focus mode for writing, day and night themes,
+and status messages that stay out of the way.
 
 | Keys | Action |
 | --- | --- |
 | `Ctrl K` | Commands |
-| `Alt 1` to `Alt 4` | Start, Plan, Generate, Review |
+| `Alt 1` to `Alt 4` | Create, Plan, Generate, Review |
 | `Ctrl Enter` | Submit the form you are typing in |
 | `Esc` | Close a dialog or leave focus mode |
 | `?` | Keyboard shortcuts |
 
 ## Design notes
 
-Design read: a four-stage production workspace for comic creators, in a night production
-room language, dial ENERGY 3 / RHYTHM 2 / MOTION 2.
+Design read: a creative SaaS workspace for comic creators, in the media-first language
+the owner asked for (a near-black canvas, big rounded cards, a prompt composer docked to
+the bottom, as in AI media studios such as Higgsfield), carried by Comic Sol's own
+identity. Dial ENERGY 3 / RHYTHM 2 / MOTION 2.
 
-- Dark first: artwork reads as the brightest thing on screen and long night sessions are
-  easier on the eyes. Day shift is a full light theme, not an afterthought.
-- Ink, cyan, amber: the logo's palette. Cyan is structure (hairlines, selection, focus).
-  Amber is reserved for the one primary action, the current stage, and the desk lamp.
-- Comic Neue for headings only: it is the engine's own lettering face, bundled under the
-  SIL Open Font License. Body text uses the system face for reading comfort.
-- Crop marks on each stage's primary panel: the identity motif, borrowed from print
-  production, and used nowhere else.
-- Paper stays paper: storyboard pages and lettering render on white in both themes
-  because that is the artwork's real surface.
-- Motion only marks change: a short stage entrance, the stage connector filling, and a
-  scanning hairline that runs only while a job or planner is really working. Reduced
-  motion turns it off.
-- Square 3 to 6 px radii and two-pixel square-cap icons drawn for this interface keep
-  the look of a production desk instead of a generic app kit.
+- Near-black canvas: generated pages and panels read as the brightest things on screen.
+  Day shift is a full light theme with its own text-safe amber.
+- Amber is the only accent, from the Comic Sol logo: the primary action, the current
+  stage, and one warm glow behind the Create hero. Cyan marks information and focus.
+- Archivo, heavy and expanded, for display headings gives the bold SaaS voice without
+  copying the reference's typeface; the same family keeps body text consistent.
+- Comic Neue appears only in lettering previews, because it is the engine's lettering face.
+- Comic pages stay paper white with ink borders in both themes: that is the artwork's
+  real surface. The Create hero draws the engine's actual layouts with screentone fills.
+- Radii come in three steps (10, 14, 20 px) so inputs, cards, and the composer read as
+  different kinds of object.
+- Motion marks change only: a short stage entrance, the hero pages spreading on hover, a
+  shimmer on jobs that are really rendering, and drawers sliding in. Reduced motion turns
+  it all off.
+
+## Bundled fonts
+
+Both fonts are under the SIL Open Font License 1.1; the license text ships next to each file.
+
+- `Archivo-Variable.ttf`: `ofl/archivo/Archivo[wdth,wght].ttf` from `google/fonts` at commit
+  `95f4904fc8bcf26d3420fe315560c96417c6dec7`, git blob
+  `cc64253d36665a5ca0d6719cdf1e32b3de453b51`, SHA-256
+  `0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053`.
+  `OFL-Archivo.txt` is `ofl/archivo/OFL.txt` at the same commit, git blob
+  `8597481ebc941863ab228e79ea4305507cd73cc6`.
+- `ComicNeue-Bold.ttf`: copied from `wenn-id/comicsol` `assets/fonts`, which records its
+  `google/fonts` provenance; SHA-256
+  `3e7e5fccfd7e0788f317b43312151c1bd5cf058c9697a8d83eac3939050bd61e`.
 
 ## Known limits
 

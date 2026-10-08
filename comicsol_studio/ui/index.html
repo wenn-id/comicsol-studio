@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark light">
     <title>Comic Sol Studio</title>
-    <link rel="preload" href="./fonts/ComicNeue-Bold.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="./fonts/Archivo-Variable.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="./css/studio.css">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   </head>
@@ -18,33 +18,32 @@
           <circle cx="24" cy="24" r="9"></circle>
           <path d="M24 3v8M24 37v8M3 24h8M37 24h8M9.2 9.2l5.6 5.6M33.2 33.2l5.6 5.6M38.8 9.2l-5.6 5.6M14.8 33.2l-5.6 5.6"></path>
         </svg>
-        <p class="brand-text">
-          <span class="brand-name">Comic Sol</span>
-          <span class="brand-tag">Prompt / Production</span>
-        </p>
+        <p class="brand-text"><span class="brand-name">Comic Sol</span><span class="brand-badge">Studio</span></p>
       </div>
-      <div id="project-slate" class="project-slate" aria-live="polite">
-        <span class="slate-empty">No project open</span>
-      </div>
-      <div class="tools">
+
+      <nav class="stage-nav" aria-label="Production stages">
+        <ol>
+          <li><button class="stage-step" type="button" data-view="start" aria-current="step"><span class="step-no">01</span><span class="step-name">Create</span><span class="step-dot" aria-hidden="true"></span><span class="step-status visually-hidden">Write the pitch</span></button></li>
+          <li><button class="stage-step" type="button" data-view="plan" disabled><span class="step-no">02</span><span class="step-name">Plan</span><span class="step-dot" aria-hidden="true"></span><span class="step-status visually-hidden">Needs a project</span></button></li>
+          <li><button class="stage-step" type="button" data-view="generate" disabled><span class="step-no">03</span><span class="step-name">Generate</span><span class="step-dot" aria-hidden="true"></span><span class="step-status visually-hidden">Needs a project</span></button></li>
+          <li><button class="stage-step" type="button" data-view="review" disabled><span class="step-no">04</span><span class="step-name">Review</span><span class="step-dot" aria-hidden="true"></span><span class="step-status visually-hidden">Needs a project</span></button></li>
+        </ol>
+      </nav>
+
+      <div class="topbar-end">
+        <div id="project-slate" class="project-slate" aria-live="polite">
+          <span class="slate-empty">No project open</span>
+        </div>
         <button id="palette-button" class="tool" type="button" aria-keyshortcuts="Control+K" aria-label="Open commands">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h13"></path></svg>
           <span class="tool-label">Commands</span><kbd>Ctrl K</kbd>
         </button>
         <button id="log-button" class="tool" type="button" aria-controls="production-log" aria-expanded="false">
           <span class="tool-label">Log</span>
         </button>
-        <button id="theme-button" class="tool" type="button"></button>
+        <button id="theme-button" class="tool tool-icon" type="button"></button>
       </div>
     </header>
-
-    <nav class="stage-track" aria-label="Production stages">
-      <ol>
-        <li><button class="stage-step" type="button" data-view="start" aria-current="step"><span class="step-no">01</span><span class="step-name">Start</span><span class="step-status">Write the pitch</span></button></li>
-        <li><button class="stage-step" type="button" data-view="plan" disabled><span class="step-no">02</span><span class="step-name">Plan</span><span class="step-status">Needs a project</span></button></li>
-        <li><button class="stage-step" type="button" data-view="generate" disabled><span class="step-no">03</span><span class="step-name">Generate</span><span class="step-status">Needs a project</span></button></li>
-        <li><button class="stage-step" type="button" data-view="review" disabled><span class="step-no">04</span><span class="step-name">Review</span><span class="step-status">Needs a project</span></button></li>
-      </ol>
-    </nav>
 
     <div class="workspace">
       <main id="stage" tabindex="-1">

@@ -1,79 +1,77 @@
-# antislop delivery gate: comicsol-studio, first build (2026-10-08)
+# antislop delivery gate: comicsol-studio, SaaS redesign (2026-10-08)
 
-Design read: four-stage production workspace for comic creators, night production room
-language, dial ENERGY 3 / RHYTHM 2 / MOTION 2. Direction came from the owner's choice of
-"Ruang produksi malam" (dark first, cyan hairlines, amber primary, light mode kept) and the
-Comic Sol logo.
+Design read: creative SaaS workspace for comic creators, in the media-first language the
+owner asked for ("like Higgsfield": near-black canvas, big rounded cards, prompt composer
+docked to the bottom), with Comic Sol's amber accent and an expanded Archivo display face
+chosen by the owner. Dial ENERGY 3 / RHYTHM 2 / MOTION 2.
 
-## Click-through (R-35), run against `127.0.0.1:8766` with `--agent-images`
+R-30 note: the owner explicitly asked for the reference's feel. The build borrows the
+layout language only; colour (Comic Sol amber), typeface (Archivo, not the reference's
+Space Grotesk), copy, and imagery (the engine's own page layouts) are Comic Sol's.
 
-- Start: typed title and pitch, byte meter updated (122 B of 200 KB); Create comic project -> `POST /api/projects` 201, Plan opened.
-- Plan: filled four documents -> "3 documents changed" summary and tab dots; Review changes -> formatted line diff (+39/+41/+249/+43); Save with an empty visual identity -> server 400, now shown as a specific message; Save with valid documents -> revision 2, status Storyboarded; Read/Edit toggle, all four tabs, storyboard panel selection and panel detail.
-- Generate: stage track click and Alt 3; cost checkbox enables Queue only for the selected route; Queue -> `POST /api/generation/queue` 201, job "Waiting for your agent" in In progress; Cancel -> toast, job moved to History.
-- Review: Run QA -> 30 findings grouped into 11 areas, stage status "QA findings"; Export without the replace box -> guard message; with it -> confirm dialog -> private blob download link, focus moved to it.
-- Shell: Ctrl K palette filter and Enter -> Plan; focus mode on and Esc; Log open and close; `?` shortcut sheet; day and night themes; reload restores the project, also when a stage is clicked during restore.
-- Mobile 375 px: no horizontal overflow on any stage; tap targets under 44 px fixed (segmented controls, reasons summary).
-- Console: only expected 404s from `GET /api/workflows/<id>` when no workflow exists (once per visit).
-- Not exercised live (no provider keys, no agent raster submission): staged promotion, provider switch, pause/resume, planner polling, production approval, archive import. Covered by code inspection and the confirmation-order tests only.
+## Click-through (R-35), `127.0.0.1:8766` with `--agent-images`, after the redesign
+
+- Create: hero, resume banner, and composer fit one 1440 x 900 screen; composer chips and the Create button sit on one row; Create view reopened the current project.
+- Generate: confirmation enables Queue; changing Auth clears the confirmation; Queue -> `POST /api/generation/queue` 201; the backend returned the existing cancelled job, and Studio now reports "Nothing new was queued ... (cancelled)" instead of a false success; Cancel on a live job -> History (first build, same handler).
+- Import round trip: exported the project archive (31 KB), selected it in the composer's file input -> confirm dialog with name and size -> Validate and import -> new project at revision 1 opened in Plan with a success message.
+- Review: Run QA -> 30 findings in 11 groups; Review nav dot turned amber.
+- Plan: storyboard pages, panel selection, and detail render; the unsaved-edits dock appears only when there are edits.
+- Themes: night and day both checked on Create.
+- Mobile 375 px: no horizontal overflow on any stage; composer no longer sticks over the hero; touch targets 44 px or larger except selects that fill a 44 px chip.
+- Console: expected 404s from `GET /api/workflows/<id>` for a project with no workflow.
+- Not exercised live (no provider keys, no agent raster): staged promotion, provider switch, pause and resume, planner polling, production approval.
 
 ## Block 1: Hard Gate
 
-- R-02 PASS: `test_copy_has_no_em_dash` scans every UI file.
-- R-03 PASS: 375 px check found no overflow on Start, Plan, Generate, Review.
-- R-17 PASS: no statistics; counts shown are live job and finding counts.
+- R-02 PASS: `test_copy_has_no_em_dash` covers every UI file.
+- R-03 PASS: 375 px check, no overflow; composer unsticks on phones and short windows.
+- R-17 PASS: only live counts (jobs, findings, bytes).
 - R-18 PASS: no testimonials.
-- R-23 PASS: no new logo or people imagery; the sun mark is the existing brand glyph, the font is the engine's bundled Comic Neue.
-- R-24 PASS: stage track lists four stages that exist; locked stages are disabled with "Needs a project".
-- R-25 PASS: `test_both_themes_define_the_same_tokens_and_meet_aa_contrast` checks every text token on every surface in both themes at 4.5:1 or more.
-- R-26 PASS: every control calls a real API or toggles real state; disabled controls say why.
-- R-27 PASS: empty, loading, and error states on every stage (planner, routes, board lanes, light table, QA, log).
+- R-23 PASS: no new logo or people imagery; hero pages are the engine's real layouts.
+- R-24 PASS: navigation lists four stages that exist; locked stages are disabled.
+- R-25 PASS: contrast test now also covers `--amber-text` in both themes.
+- R-26 PASS: every control has a real behaviour; disabled controls explain why.
+- R-27 PASS: empty, loading, and error states on every stage; queue repeats now explained.
 - R-28 PASS: no FAQ.
-- R-32 PASS: tabs, palette, dialogs, stage track work by keyboard; focus ring tested; only `#stage` drops the default ring and replaces it.
-- R-33 PASS: features live in source; no patch scripts in the project.
-- R-34 PASS: both themes checked visually and by the contrast test.
+- R-32 PASS: focus rings stay; only `#stage` and the composer's own fields drop theirs, replaced by the composer ring (tested).
+- R-33 PASS: no patch scripts in the project.
+- R-34 PASS: both themes checked.
 - R-35 PASS: click-through above.
-- R-36 PASS: no claims beyond what the code does; README states the private, unreleased status.
-- R-37 PASS: direction chosen by the owner; dials declared.
-- R-38 PASS: placeholders say what goes in a field; no realistic fake data in the UI.
+- R-36 PASS: README states the private, unreleased status.
+- R-37 PASS: direction from the owner (reference, accent, typeface) recorded above.
+- R-38 PASS: no fabricated content.
 
 ## Block 2: Purpose-Gate
 
-- R-01 PASS: one gradient, the desk-lamp pool, marks the focal workspace; the slate stripe marks the cost slip.
-- R-04 PASS: custom square-cap icons, each tied to its action (upload, download, focus, pause).
-- R-06 PASS: Comic Neue is the engine's lettering face, headings only; slash-label eyebrows come from the logo.
-- R-07 PASS: no background grid or pattern.
-- R-08 PASS: no decorative arrows.
-- R-09 PASS: chips mark real state (status, tone, cast); no capsule badges.
-- R-10 PASS: no glassmorphism.
-- R-12 PASS: shadow only on paper pages, the accepted raster, toasts, and dialogs (lifted objects).
-- R-13 PASS: no glow.
-- R-14 PASS: route, job, and format cards differ by content; lanes carry hierarchy.
-- R-19 PASS: motion marks stage change, connector progress, and real in-flight work only; reduced motion respected.
-- R-22 PASS: no illustrations; the only imagery is the creator's own pages.
+- R-01 PASS: one gradient glow behind the Create hero marks the focal point; screentone fills mark comic pages.
+- R-04 PASS: square-cap icons tied to actions.
+- R-06 PASS: Archivo expanded for display (owner choice, distinct from the reference); uppercase only on display headings and labels.
+- R-07 PASS: no background grid; dot screentone only inside page panels and job banners, where it reads as print.
+- R-08 PASS: the play glyph marks the two "start work" buttons only.
+- R-09 PASS: no decorative badges; the "Studio" tag names the product area.
+- R-10 PASS: blur only on the top bar.
+- R-12 PASS: shadows on floating objects only (composer, dialogs, toasts, drawer, paper pages).
+- R-13 PASS: glow on the hero and the focused composer ring only.
+- R-14 PASS: job cards differ by state; lanes carry hierarchy.
+- R-19 PASS: motion marks change or real work only; reduced motion respected.
+- R-22 PASS: no illustrations beyond the engine's layouts.
 
 ## Block 3: Liveliness
 
-- Dials declared: ENERGY 3 / RHYTHM 2 / MOTION 2. PASS
-- Output matches the dials: each stage has its own composition (composer, binder, board, light table). PASS
-- One focal point per screen: the crop-marked primary panel. PASS
-- Whitespace is structural: panel gaps and stage head spacing separate work areas. PASS
-- One deliberate accent: amber for the primary action, current stage, and lamp. PASS
-- Identity motif: crop marks plus paper-white comic pages. PASS
-- Design read declared before generation. PASS
+- Dials declared and matched: bold display type and amber CTAs (ENERGY 3), each stage keeps its own composition (RHYTHM 2), purposeful motion (MOTION 2). PASS
+- One focal point per screen: the composer on Create, the board on Generate, the light table on Review, the binder on Plan. PASS
+- One deliberate accent: amber. PASS
+- Identity motif: paper-white comic pages with ink borders and screentone, from hero to storyboard. PASS
 
 ## Block 4: Craftsmanship and Quality Locks
 
-- C-1 PASS: decisions and reasons are listed in README "Design notes".
-- C-2 PASS: no control without behaviour.
-- C-3 PASS: no template sections; every panel maps to a backend capability.
-- C-4 PASS: states, themes, breakpoints, keyboard covered above.
-- C-5 PASS: nothing fabricated.
-- R-05 PASS: app layout built per stage task, not a dashboard shell.
-- R-11 PASS: 3 to 6 px radii; no pills.
-- R-15 PASS: specific actions ("Create comic project", "Queue generation", "Create private export").
+- C-1 to C-5 PASS: reasons in README "Design notes"; no dead controls; no template sections; resilient states, themes, breakpoints, keyboard; nothing fabricated.
+- R-05 PASS: layouts follow each stage's task.
+- R-11 PASS: three radius steps, no pill-everything.
+- R-15 PASS: specific actions ("Create", "Queue", "Validate and import", "Create private export").
 - R-16 PASS: no buzzwords.
-- R-20 PASS: swapping the name still leaves the production-desk identity.
-- R-21 PASS: dark default justified for a creative tool; working light theme.
-- R-29 PASS: ink, cyan, amber plus status green and red.
-- R-30 PASS: not modelled on another product.
+- R-20 PASS: amber, paper pages, and Comic Sol copy keep the identity.
+- R-21 PASS: dark default for a media tool, working light theme.
+- R-29 PASS: near-black neutrals, amber, cyan, status green and red.
+- R-30 PASS with owner request: see note above.
 - R-31 PASS: one-line reasons in README.

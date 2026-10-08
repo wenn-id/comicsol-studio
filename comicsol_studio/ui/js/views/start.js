@@ -1,4 +1,5 @@
-// Start: write the pitch, pick the page count and planner, or open an archive.
+// Create: a hero that shows the engine's real page layouts, a prompt composer
+// docked to the bottom of the screen, and archive import by drop or picker.
 
 import {
   MAX_ARCHIVE_BYTES,
@@ -9,8 +10,10 @@ import {
   importProject,
   queuePlanning,
 } from "/static/api.js";
-import { h, icon, replace, uid } from "../dom.js";
-import { MAX_SOURCE_BYTES, formatBytes, utf8Length } from "../format.js";
+import { confirmDialog } from "../dialogs.js";
+import { h, icon, replace } from "../dom.js";
+import { MAX_SOURCE_BYTES, formatBytes, humanize, utf8Length } from "../format.js";
+import { PAGE_HEIGHT, PAGE_WIDTH, parseDocument, storyboardPages } from "../plan-model.js";
 
 const LANGUAGES = Object.freeze([
   ["en", "English"], ["id", "Indonesian"], ["ja", "Japanese"], ["ko", "Korean"],
@@ -18,19 +21,31 @@ const LANGUAGES = Object.freeze([
 ]);
 const MODES = Object.freeze([
   Object.freeze({
+    id: "source-mode-prompt",
     value: "short_prompt",
-    label: "Short prompt",
+    label: "Prompt",
     hint: "A few lines about the idea. The planner invents the details.",
-    placeholder: "Who is it about, what do they want, and what stands in the way?",
+    placeholder: "Describe the comic you imagine: who it is about, what they want, what stands in the way.",
   }),
   Object.freeze({
+    id: "source-mode-story",
     value: "pasted_story",
-    label: "Full story",
-    hint: "Paste a finished story or script. The planner adapts it into pages.",
-    placeholder: "Paste your story or script here.",
+    label: "Story",
+    hint: "A finished story or script. The planner adapts it into pages.",
+    placeholder: "Paste your story or script. The planner adapts it into pages.",
   }),
 ]);
 const SELF_PLANNED = "self";
+
+// The five page layouts the engine composes, as panel rectangles on its
+// 1600 x 2400 page. The hero draws them so the first screen shows real output.
+const LAYOUTS = Object.freeze([
+  ["Two top, hero bottom", [[64, 64, 720, 1064], [816, 64, 720, 1064], [64, 1160, 1472, 1176]]],
+  ["Three horizontal", [[64, 64, 1472, 736], [64, 832, 1472, 736], [64, 1600, 1472, 736]]],
+  ["Full page", [[64, 64, 1472, 2272]]],
+  ["Hero top, two bottom", [[64, 64, 1472, 1176], [64, 1272, 720, 1064], [816, 1272, 720, 1064]]],
+  ["Two horizontal", [[64, 64, 1472, 1120], [64, 1216, 1472, 1120]]],
+]);
 
 // Retrying the same request reuses its idempotency key, so a flaky network
 // never creates the same project twice.
@@ -44,77 +59,101 @@ function failureMessage(error) {
   return "The project request could not be completed safely.";
 }
 
-function pagePicker() {
-  const group = h("fieldset", { class: "page-picker" }, h("legend", { text: "Pages" }));
-  const row = h("div", { class: "page-options" });
-  for (let count = 1; count <= 4; count += 1) {
-    const id = uid("pages");
-    const input = h("input", {
-      id,
-      type: "radio",
-      name: "page_count",
-      value: String(count),
-      class: "visually-hidden",
-      checked: count === 2,
-      required: true,
-    });
-    const sheets = h("span", { class: "page-sheets", "aria-hidden": "true" });
-    for (let sheet = 0; sheet < count; sheet += 1) sheets.append(h("span", { class: "page-sheet" }));
-    row.append(input, h("label", { for: id, class: "page-option" }, sheets, h("span", { text: `${count}` })));
-  }
-  group.append(row, h("p", { class: "field-help", text: "Comic Sol plans one to four pages per project." }));
-  return group;
+function pageSheet(rects, className = "page-thumb") {
+  return h(
+    "span",
+    { class: className, "aria-hidden": "true" },
+    rects.map(([x, y, width, height], index) => h("span", {
+      class: `thumb-panel tone-${index % 3}`,
+      style: {
+        left: `${(x / PAGE_WIDTH) * 100}%`,
+        top: `${(y / PAGE_HEIGHT) * 100}%`,
+        width: `${(width / PAGE_WIDTH) * 100}%`,
+        height: `${(height / PAGE_HEIGHT) * 100}%`,
+      },
+    })),
+  );
 }
 
-function composer(context) {
+function hero() {
+  return h(
+    "section",
+    { class: "create-hero", "aria-labelledby": "create-heading" },
+    h(
+      "div",
+      { class: "fan", "aria-hidden": "true" },
+      LAYOUTS.map(([, rects], index) => h("span", { class: "fan-card", style: { "--i": String(index - 2) } }, pageSheet(rects))),
+    ),
+    h(
+      "h1",
+      { id: "create-heading", class: "display" },
+      h("span", { text: "Turn a pitch" }),
+      h("span", { class: "display-accent", text: "into comic pages" }),
+    ),
+    h("p", {
+      class: "hero-lede",
+      text: "Describe a story or paste one. Comic Sol plans the pages, renders the panels, letters them, and exports a PDF.",
+    }),
+  );
+}
+
+function chip(label, control, extraClass = "") {
+  return h("label", { class: `chip ${extraClass}`.trim() }, h("span", { class: "chip-label", text: label }), control);
+}
+
+export function mountStartView(context) {
   const { store, announce, navigate, setFocusMode, sessionReady } = context;
   let retry = null;
+  let importRetry = null;
   let mode = MODES[0];
+  let resumeKey = null;
 
+  // Composer controls
   const title = h("input", {
     id: "project-title",
     name: "title",
     type: "text",
-    class: "title-input",
+    class: "composer-title",
     required: true,
     maxlength: "160",
     autocomplete: "off",
-    placeholder: "Name your comic",
+    placeholder: "Untitled comic",
+    "aria-label": "Project title",
   });
   const source = h("textarea", {
     id: "project-source",
     name: "source",
+    class: "composer-input",
     required: true,
     maxlength: String(MAX_SOURCE_BYTES),
-    rows: "9",
+    rows: "3",
     placeholder: mode.placeholder,
+    "aria-label": "Prompt or story",
     "aria-describedby": "project-source-help project-source-meter",
   });
-  const modeHint = h("p", { class: "field-help", id: "project-source-help", text: mode.hint });
-  const meterFill = h("span", { class: "meter-fill" });
-  const meterText = h("span", { class: "meter-text" });
-  const meter = h(
-    "div",
-    { class: "meter", id: "project-source-meter" },
-    h("span", { class: "meter-track", "aria-hidden": "true" }, meterFill),
-    meterText,
-  );
+  const modeHint = h("p", { class: "visually-hidden", id: "project-source-help", text: mode.hint });
+  const meter = h("span", { class: "meter", id: "project-source-meter" });
 
   function updateMeter() {
     const bytes = utf8Length(source.value.trim());
-    const ratio = Math.min(1, bytes / MAX_SOURCE_BYTES);
-    meterFill.style.setProperty("--ratio", String(ratio));
-    meter.dataset.state = bytes > MAX_SOURCE_BYTES ? "over" : ratio > 0.85 ? "near" : "ok";
-    meterText.textContent = `${formatBytes(bytes)} of ${formatBytes(MAX_SOURCE_BYTES)}`;
+    meter.dataset.state = bytes > MAX_SOURCE_BYTES ? "over" : bytes > MAX_SOURCE_BYTES * 0.85 ? "near" : "ok";
+    meter.textContent = `${formatBytes(bytes)} / ${formatBytes(MAX_SOURCE_BYTES)}`;
   }
-  source.addEventListener("input", updateMeter);
+  // The prompt grows with its text up to a comfortable height, then scrolls.
+  function autosize() {
+    source.style.height = "auto";
+    source.style.height = `${Math.min(source.scrollHeight, 320)}px`;
+  }
+  source.addEventListener("input", () => {
+    updateMeter();
+    autosize();
+  });
   updateMeter();
 
-  const modeGroup = h("fieldset", { class: "segmented" }, h("legend", { class: "visually-hidden", text: "Source format" }));
+  const modeGroup = h("fieldset", { class: "segmented segmented-compact" }, h("legend", { class: "visually-hidden", text: "Source format" }));
   for (const option of MODES) {
-    const id = option.value === "short_prompt" ? "source-mode-prompt" : "source-mode-story";
     const input = h("input", {
-      id,
+      id: option.id,
       type: "radio",
       name: "source_mode",
       value: option.value,
@@ -126,9 +165,14 @@ function composer(context) {
       modeHint.textContent = option.hint;
       source.placeholder = option.placeholder;
     });
-    modeGroup.append(input, h("label", { for: id, text: option.label }));
+    modeGroup.append(input, h("label", { for: option.id, text: option.label }));
   }
 
+  const pageCount = h(
+    "select",
+    { id: "project-page-count", name: "page_count", required: true },
+    [1, 2, 3, 4].map((count) => h("option", { value: String(count), selected: count === 2, text: `${count} page${count === 1 ? "" : "s"}` })),
+  );
   const language = h("input", {
     id: "project-language",
     name: "language",
@@ -136,19 +180,18 @@ function composer(context) {
     value: "en",
     required: true,
     maxlength: "16",
+    size: "4",
     list: "project-language-options",
     autocomplete: "off",
     spellcheck: "false",
-    "aria-describedby": "project-language-help",
   });
   const languages = h(
     "datalist",
     { id: "project-language-options" },
     LANGUAGES.map(([code, name]) => h("option", { value: code, text: name })),
   );
-
   const planner = h("select", { id: "project-planner", name: "planner", "aria-describedby": "project-planner-help" });
-  const plannerHelp = h("p", { class: "field-help", id: "project-planner-help", text: "Loading planners…" });
+  const plannerHelp = h("p", { class: "composer-help", id: "project-planner-help", text: "Loading planners…" });
 
   async function loadPlanners() {
     let options = [];
@@ -158,7 +201,7 @@ function composer(context) {
     } catch {
       options = [];
     }
-    const self = h("option", { value: SELF_PLANNED, text: "Write the plan myself (no planner call)" });
+    const self = h("option", { value: SELF_PLANNED, text: "Write it myself" });
     const providers = [...new Set(options.map((option) => option.provider))];
     const groups = providers.map((provider) => h(
       "optgroup",
@@ -176,69 +219,122 @@ function composer(context) {
     const firstEnabled = options.find((option) => option.enabled);
     planner.value = firstEnabled ? `${firstEnabled.provider}\u0000${firstEnabled.model}` : SELF_PLANNED;
     plannerHelp.textContent = firstEnabled
-      ? "The planner drafts all four plan documents. It runs on your provider account."
-      : "No planner key was found in the environment that launched Studio, so you will write the plan yourself. Set OPENAI_API_KEY or ANTHROPIC_API_KEY and restart to enable one.";
+      ? "The planner drafts all four plan documents on your provider account. Keys stay on the machine running Studio."
+      : "No planner key found, so you will write the plan yourself. Set OPENAI_API_KEY or ANTHROPIC_API_KEY and restart Studio to enable one.";
   }
   void loadPlanners();
 
-  const submit = h("button", { type: "submit", class: "button button-primary button-large" }, "Create comic project");
-  const focusButton = h(
+  // Archive import: the picker and drag-and-drop both land in one file input,
+  // which the WebMCP import tool also reads.
+  const archive = h("input", {
+    id: "project-archive",
+    name: "archive",
+    type: "file",
+    accept: ".comic-sol-handoff",
+    class: "visually-hidden",
+  });
+  const archiveChip = h("span", { class: "file-chip", hidden: true });
+  const importLabel = h(
+    "label",
+    { for: "project-archive", class: "chip chip-icon", title: "Import a .comic-sol-handoff archive" },
+    icon("upload"),
+    h("span", { class: "visually-hidden", text: "Import a .comic-sol-handoff archive" }),
+  );
+
+  function confirmImport(trigger) {
+    const file = archive.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".comic-sol-handoff")) {
+      announce("Choose a .comic-sol-handoff archive.", "error");
+      return;
+    }
+    if (file.size > MAX_ARCHIVE_BYTES) {
+      announce("The archive is larger than the import limit.", "error");
+      return;
+    }
+    confirmDialog({
+      title: "Import this archive?",
+      body: [
+        `${file.name} · ${formatBytes(file.size)}`,
+        "Studio validates and migrates it on the server. Your original file is never changed.",
+      ],
+      confirmText: "Validate and import",
+      trigger,
+      onConfirm: async (close) => {
+        announce("Validating and importing the archive…");
+        try {
+          importRetry = retryOperation(importRetry, file);
+          const project = await importProject(file, importRetry.idempotencyKey);
+          close();
+          store.setProject(project);
+          announce("Archive imported. Read the plan before you continue.", "success");
+          navigate("plan");
+        } catch (error) {
+          announce(failureMessage(error), "error");
+        }
+      },
+    });
+  }
+
+  function describeArchive() {
+    const file = archive.files?.[0];
+    archiveChip.hidden = !file;
+    if (!file) return;
+    replace(
+      archiveChip,
+      h("span", { class: "file-name", text: file.name }),
+      h("button", { type: "button", class: "file-action", on: { click: (event) => confirmImport(event.currentTarget) } }, "Import"),
+    );
+  }
+  archive.addEventListener("change", () => {
+    describeArchive();
+    confirmImport(importLabel);
+  });
+
+  const submit = h(
     "button",
-    { type: "button", class: "button button-quiet", on: { click: () => setFocusMode(document.body.dataset.focus !== "true") } },
-    icon("focus"),
-    "Focus",
+    { type: "submit", class: "button-generate", title: "Create project (Ctrl Enter)", "aria-keyshortcuts": "Control+Enter" },
+    h("span", { class: "generate-label", text: "Create" }),
+    icon("play"),
   );
 
   const form = h(
     "form",
-    { id: "create-project-form", class: "composer", novalidate: false },
+    { id: "create-project-form", class: "composer" },
     h(
       "div",
-      { class: "field" },
-      h("label", { for: "project-title", class: "visually-hidden", text: "Project title" }),
+      { class: "composer-head" },
       title,
-    ),
-    modeGroup,
-    h(
-      "div",
-      { class: "field field-source" },
-      h("label", { for: "project-source", text: "Prompt or story" }),
-      source,
-      h("div", { class: "source-foot" }, modeHint, meter),
-    ),
-    h(
-      "div",
-      { class: "composer-grid" },
-      pagePicker(),
+      modeGroup,
       h(
-        "div",
-        { class: "field" },
-        h("label", { for: "project-language", text: "Language code" }),
-        language,
-        languages,
-        h("p", { class: "field-help", id: "project-language-help", text: "Lettering language, for example en, id, or ja." }),
+        "button",
+        { type: "button", class: "icon-button", title: "Focus mode", "aria-label": "Focus mode", on: { click: () => setFocusMode(document.body.dataset.focus !== "true") } },
+        icon("focus"),
       ),
     ),
+    source,
+    modeHint,
     h(
       "div",
-      { class: "field" },
-      h("label", { for: "project-planner", text: "Planner" }),
-      planner,
-      plannerHelp,
-    ),
-    h(
-      "div",
-      { class: "composer-actions" },
+      { class: "composer-bar" },
+      importLabel,
+      archive,
+      archiveChip,
+      chip("Pages", pageCount),
+      chip("Language", language),
+      languages,
+      chip("Planner", planner, "chip-wide"),
+      h("span", { class: "composer-spacer" }),
+      meter,
       submit,
-      h("p", { class: "hint" }, h("kbd", { text: "Ctrl Enter" }), " creates the project"),
-      focusButton,
     ),
+    plannerHelp,
   );
 
   function setBusy(busy) {
     for (const control of form.elements) control.disabled = busy;
     form.setAttribute("aria-busy", String(busy));
-    submit.textContent = busy ? "Creating…" : "Create comic project";
+    submit.querySelector(".generate-label").textContent = busy ? "Creating…" : "Create";
   }
 
   form.addEventListener("keydown", (event) => {
@@ -262,7 +358,7 @@ function composer(context) {
       prompt: sourceValue,
       language: language.value.trim(),
       mode: form.elements.source_mode.value,
-      page_count: Number(form.elements.page_count.value),
+      page_count: Number(pageCount.value),
     };
     const plannerChoice = planner.value;
     setBusy(true);
@@ -277,7 +373,7 @@ function composer(context) {
         try {
           const planned = await queuePlanning(project.project_id, project.revision, { provider, model });
           store.setPlanningJob(planned.job);
-          outcome = "The planner is drafting your plan. This stage updates on its own.";
+          outcome = "The planner is drafting your plan. The Plan stage updates on its own.";
         } catch {
           outcome = "The planner could not be queued. You can still write the plan yourself.";
         }
@@ -291,165 +387,88 @@ function composer(context) {
     }
   });
 
-  return h(
-    "section",
-    { class: "panel panel-marked start-composer", "aria-labelledby": "compose-heading" },
-    h(
-      "header",
-      { class: "panel-head" },
-      h("p", { class: "eyebrow", text: "01 / Start" }),
-      h("h1", { id: "compose-heading", text: "Write the pitch" }),
-    ),
-    form,
-  );
-}
+  // Continue card for the project that is already open.
+  const resume = h("section", { class: "resume-card", hidden: true, "aria-label": "Continue your project" });
 
-function archivePanel({ store, announce, navigate }) {
-  let retry = null;
-  const archive = h("input", {
-    id: "project-archive",
-    name: "archive",
-    type: "file",
-    accept: ".comic-sol-handoff",
-    required: true,
-    class: "visually-hidden",
-    "aria-describedby": "project-archive-help",
-  });
-  const fileLine = h("span", { class: "drop-file", text: "No archive chosen" });
-  const drop = h(
-    "label",
-    { for: "project-archive", class: "dropzone" },
+  function renderResume(project, workingPlan) {
+    const parsed = parseDocument(workingPlan?.storyboard);
+    const pages = parsed.state === "valid" ? storyboardPages(parsed.value) : [];
+    const first = pages[0];
+    const rects = first
+      ? first.panels.filter((panel) => panel.box).map((panel) => [
+        (panel.box.left / 100) * PAGE_WIDTH,
+        (panel.box.top / 100) * PAGE_HEIGHT,
+        (panel.box.width / 100) * PAGE_WIDTH,
+        (panel.box.height / 100) * PAGE_HEIGHT,
+      ])
+      : [];
+    const projectTitle = typeof project.summary?.title === "string" && project.summary.title ? project.summary.title : "Untitled comic";
+    replace(
+      resume,
+      h("div", { class: "resume-thumbs" }, pageSheet(rects, "page-thumb resume-thumb")),
+      h(
+        "div",
+        { class: "resume-body" },
+        h("p", { class: "eyebrow", text: "Continue where you left off" }),
+        h("h2", { text: projectTitle }),
+        h("p", { class: "resume-meta", text: `${humanize(project.status)} · revision ${project.revision}${pages.length ? ` · ${pages.length} page${pages.length === 1 ? "" : "s"} planned` : ""}` }),
+      ),
+      h("button", { type: "button", class: "button", on: { click: () => navigate("plan") } }, "Open the plan"),
+    );
+  }
+
+  const dropOverlay = h(
+    "div",
+    { class: "drop-overlay", "aria-hidden": "true" },
     icon("upload"),
-    h("span", { class: "drop-title", text: "Drop a .comic-sol-handoff archive" }),
-    h("span", { class: "drop-sub", text: "or click to choose one" }),
-    fileLine,
-  );
-  const submit = h("button", { type: "submit", class: "button", disabled: true }, "Validate and import");
-
-  function describe() {
-    const file = archive.files?.[0];
-    fileLine.textContent = file ? `${file.name} · ${formatBytes(file.size)}` : "No archive chosen";
-    drop.dataset.filled = file ? "true" : "false";
-    submit.disabled = !file;
-  }
-  archive.addEventListener("change", describe);
-  for (const type of ["dragenter", "dragover"]) {
-    drop.addEventListener(type, (event) => {
-      event.preventDefault();
-      drop.dataset.over = "true";
-    });
-  }
-  for (const type of ["dragleave", "drop"]) {
-    drop.addEventListener(type, () => {
-      drop.dataset.over = "false";
-    });
-  }
-  drop.addEventListener("drop", (event) => {
-    event.preventDefault();
-    const files = event.dataTransfer?.files;
-    if (!files?.length) return;
-    archive.files = files;
-    describe();
-  });
-
-  const form = h(
-    "form",
-    { id: "import-project-form", class: "import-form" },
-    archive,
-    drop,
-    h("p", {
-      class: "field-help",
-      id: "project-archive-help",
-      text: "One portable archive at a time. Studio validates and migrates it on the server and never changes your original file.",
-    }),
-    h("div", { class: "actions" }, submit),
+    h("p", { text: "Drop the .comic-sol-handoff archive to import it" }),
   );
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const file = archive.files?.[0];
-    if (!file || !file.name.endsWith(".comic-sol-handoff")) {
-      announce("Choose a .comic-sol-handoff archive.", "error");
-      archive.focus();
-      return;
-    }
-    if (file.size > MAX_ARCHIVE_BYTES) {
-      announce("The archive is larger than the import limit.", "error");
-      archive.focus();
-      return;
-    }
-    submit.disabled = true;
-    submit.textContent = "Validating…";
-    announce("Validating and importing the archive…");
-    try {
-      retry = retryOperation(retry, file);
-      const project = await importProject(file, retry.idempotencyKey);
-      store.setProject(project);
-      announce("Archive imported. Read the plan before you continue.", "success");
-      navigate("plan");
-    } catch (error) {
-      announce(failureMessage(error), "error");
-    } finally {
-      if (form.isConnected) {
-        submit.disabled = !archive.files?.length;
-        submit.textContent = "Validate and import";
-      }
-    }
-  });
-
-  return h(
-    "section",
-    { class: "panel start-archive", "aria-labelledby": "archive-heading" },
-    h(
-      "header",
-      { class: "panel-head" },
-      h("p", { class: "eyebrow", text: "Or continue" }),
-      h("h2", { id: "archive-heading", text: "Open an archive" }),
-    ),
-    form,
-  );
-}
-
-function privacyNote() {
-  return h(
-    "section",
-    { class: "panel panel-quiet start-note", "aria-labelledby": "note-heading" },
-    h("h2", { id: "note-heading", class: "note-title", text: "Where your story goes" }),
-    h(
-      "ul",
-      { class: "note-list" },
-      h("li", { text: "Your text goes only to this Studio's project API and, if you pick one, the planner provider." }),
-      h("li", { text: "Provider keys stay in the environment that launched Studio. This page never sees them." }),
-      h("li", { text: "Nothing is published. Exports are private downloads." }),
-    ),
-  );
-}
-
-export function mountStartView(context) {
-  // When a project is already open, say so before the creator starts a new one.
-  const resume = h("div", { class: "resume-strip", hidden: true });
   const element = h(
     "div",
     { class: "view view-start" },
     resume,
-    composer(context),
-    h("div", { class: "start-side" }, archivePanel(context), privacyNote()),
+    hero(),
+    h("div", { class: "composer-dock" }, form),
+    dropOverlay,
   );
-  let shownFor = null;
+
+  // Dropping a file anywhere on Create imports it.
+  let dragDepth = 0;
+  element.addEventListener("dragenter", (event) => {
+    if (!event.dataTransfer?.types?.includes("Files")) return;
+    dragDepth += 1;
+    element.dataset.drop = "true";
+  });
+  element.addEventListener("dragover", (event) => {
+    if (event.dataTransfer?.types?.includes("Files")) event.preventDefault();
+  });
+  element.addEventListener("dragleave", () => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (!dragDepth) element.dataset.drop = "false";
+  });
+  element.addEventListener("drop", (event) => {
+    event.preventDefault();
+    dragDepth = 0;
+    element.dataset.drop = "false";
+    const files = event.dataTransfer?.files;
+    if (!files?.length) return;
+    archive.files = files;
+    describeArchive();
+    confirmImport(importLabel);
+  });
+
   return {
     element,
     supportsFocus: true,
     update(state) {
       const project = state.project;
       resume.hidden = !project;
-      if (!project || shownFor === `${project.project_id}:${project.revision}`) return;
-      shownFor = `${project.project_id}:${project.revision}`;
-      const title = typeof project.summary?.title === "string" && project.summary.title ? project.summary.title : "Untitled comic";
-      replace(
-        resume,
-        h("p", {}, "You are working on ", h("strong", { text: title }), ". Creating a new project switches to the new one."),
-        h("button", { type: "button", class: "button", on: { click: () => context.navigate("plan") } }, "Continue in Plan"),
-      );
+      if (!project) return;
+      const key = `${project.project_id}:${project.revision}`;
+      if (key === resumeKey) return;
+      resumeKey = key;
+      renderResume(project, state.workingPlan);
     },
     dispose() {},
   };

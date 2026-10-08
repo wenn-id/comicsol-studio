@@ -28,6 +28,8 @@ comicsol_studio = [
     "ui/css/*.css",
     "ui/js/*.js",
     "ui/js/views/*.js",
+    "ui/fonts/Archivo-Variable.ttf",
+    "ui/fonts/OFL-Archivo.txt",
     "ui/fonts/ComicNeue-Bold.ttf",
     "ui/fonts/OFL-ComicNeue.txt",
 ]

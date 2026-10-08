@@ -17,7 +17,7 @@ import {
   submitStagedRaster,
 } from "/static/api.js";
 import { h, icon, replace, uid } from "../dom.js";
-import { WORKFLOW_PHASES, clockTime, humanize, phaseLabel, shortId, stateLabel } from "../format.js";
+import { WORKFLOW_PHASES, clockTime, humanize, phaseLabel, plural, shortId, stateLabel } from "../format.js";
 import {
   LANES,
   availableActions,
@@ -25,11 +25,16 @@ import {
   displayState,
   groupJobs,
   hasActiveJobs,
+  queueOutcome,
   routeFingerprint,
 } from "../jobs-model.js";
 import { confirmDialog } from "../dialogs.js";
 
 const REFRESH_MS = 2000;
+
+function chip(label, control, extraClass = "") {
+  return h("label", { class: `chip ${extraClass}`.trim() }, h("span", { class: "chip-label", text: label }), control);
+}
 const UNKNOWN_COST = "Estimated cost is unknown. Confirm only if you accept that uncertainty.";
 
 export function mountGenerateView({ store, announce, navigate }) {
@@ -44,32 +49,41 @@ export function mountGenerateView({ store, announce, navigate }) {
   let lastJobs = UNSET;
   let lastWorkflow = UNSET;
 
-  // Route picker
-  const routeList = h("div", { class: "route-list", role: "radiogroup", "aria-label": "Render route" });
-  const authGroup = h("div", { class: "segmented", role: "radiogroup", "aria-label": "Authentication mode" });
+  // Render bar: route, authentication, and the cost confirmation, docked to
+  // the bottom of the screen like a prompt composer.
+  const route = h("select", { id: "generation-route", name: "route" });
+  const auth = h("select", { id: "generation-auth-mode", name: "auth_mode" });
   const reasons = h("ul", { class: "reason-list", id: uid("reasons") });
-  const costLine = h("p", { class: "slate-cost", id: "cost-guidance", text: UNKNOWN_COST });
+  const costLine = h("span", { class: "cost-line", id: "cost-guidance", text: UNKNOWN_COST });
   const costConfirmation = h("input", { id: "cost-confirmation", name: "cost_confirmation", type: "checkbox" });
   const confirmLabel = h("span", { text: "I accept this cost status for the selected route." });
-  const submit = h("button", { type: "submit", class: "button button-primary", disabled: true }, "Queue generation");
-  const routeEmpty = h("div", { class: "state-note", hidden: true });
+  const submitLabel = h("span", { class: "generate-label", text: "Queue" });
+  const submit = h("button", { type: "submit", class: "button-generate", disabled: true }, submitLabel, icon("play"));
+  const routeEmpty = h("p", {
+    class: "composer-help",
+    hidden: true,
+    text: "No render route can run in this Studio. Start Studio with an image provider key, or with --agent-images for an agent session, then reload this stage.",
+  });
 
   const form = h(
     "form",
-    { class: "panel panel-marked route-panel", "aria-describedby": "cost-guidance" },
-    h("header", { class: "panel-head" }, h("p", { class: "eyebrow", text: "Route / Cost" }), h("h2", { text: "Choose a render route" })),
-    routeEmpty,
-    routeList,
-    h("div", { class: "field" }, h("p", { class: "field-label", text: "Authentication mode" }), authGroup),
+    { class: "composer render-bar", "aria-describedby": "cost-guidance" },
     h(
       "div",
-      { class: "slate" },
-      h("p", { class: "slate-title", text: "Cost slate" }),
-      costLine,
-      h("details", { class: "reasons" }, h("summary", { text: "Why this route" }), reasons),
-      h("label", { class: "confirm-row", for: "cost-confirmation" }, costConfirmation, confirmLabel),
+      { class: "composer-bar" },
+      chip("Route", route, "chip-wide"),
+      chip("Auth", auth),
+      h("details", { class: "why" }, h("summary", { text: "Why this route" }), reasons),
+      h("span", { class: "composer-spacer" }),
       submit,
     ),
+    h(
+      "div",
+      { class: "cost-row" },
+      costLine,
+      h("label", { class: "confirm-chip", for: "cost-confirmation" }, costConfirmation, confirmLabel),
+    ),
+    routeEmpty,
   );
 
   // Workflow strip
@@ -130,57 +144,46 @@ export function mountGenerateView({ store, announce, navigate }) {
         "div",
         {},
         h("p", { class: "eyebrow", text: "03 / Generate" }),
-        h("h1", { text: "Render the panels" }),
-        h("p", { class: "stage-lede", text: "Pick one route, sign the cost slate, and watch the board. Results wait for your approval before they count." }),
+        h("h1", { class: "display display-md", text: "Render the panels" }),
+        h("p", { class: "stage-lede", text: "Pick one route, confirm its cost, and watch the board. Results wait for your approval before they count." }),
       ),
       h("div", { class: "stage-tools" }, h("button", { type: "button", class: "button", on: { click: () => navigate("review") } }, "Open the light table")),
     ),
-    h("div", { class: "generate-layout" }, form, h("div", { class: "generate-main" }, workflowPanel, boardPanel)),
+    workflowPanel,
+    boardPanel,
+    h("div", { class: "composer-dock" }, form),
   );
 
-  // Route selection
+  // Route selection: changing the route or the authentication mode always
+  // clears the cost confirmation, so it only ever covers the exact route shown.
   function renderAuthModes() {
     const modes = Array.isArray(selected?.auth_modes) ? selected.auth_modes : [];
     if (!modes.includes(authMode)) authMode = modes[0] || "";
-    const name = uid("auth");
-    replace(authGroup, modes.map((mode) => {
-      const id = uid("auth-mode");
-      const input = h("input", { id, type: "radio", name, value: mode, class: "visually-hidden", checked: mode === authMode });
-      input.addEventListener("change", () => {
-        authMode = mode;
-        resetConfirmation();
-      });
-      return [input, h("label", { for: id, text: humanize(mode) })];
-    }));
-    if (!modes.length) authGroup.append(h("p", { class: "field-help", text: "Choose a route first." }));
+    auth.replaceChildren(...modes.map((mode) => h("option", { value: mode, selected: mode === authMode, text: humanize(mode) })));
+    if (!modes.length) auth.append(h("option", { value: "", text: "None" }));
+    auth.disabled = !modes.length;
   }
 
   function renderRoutes() {
     routeEmpty.hidden = options.length > 0;
-    if (!options.length) {
-      replace(routeEmpty, h("p", { text: "No render route can run in this Studio. Start Studio with an image provider key, or connect an agent session, then reload this stage." }));
-    }
-    const name = uid("route");
-    replace(routeList, options.map((option) => {
-      const id = uid("route-option");
-      const input = h("input", { id, type: "radio", name, class: "visually-hidden", checked: option === selected });
-      input.addEventListener("change", () => {
-        selected = option;
-        renderAuthModes();
-        resetConfirmation();
-      });
-      return [
-        input,
-        h(
-          "label",
-          { for: id, class: "route-card" },
-          h("span", { class: "route-provider", text: option.provider }),
-          h("span", { class: "route-model", text: option.model }),
-          h("span", { class: "route-caps", text: (option.capabilities || []).map(humanize).join(" · ") || "No capabilities declared" }),
-        ),
-      ];
-    }));
+    route.replaceChildren(...options.map((option, index) => h("option", {
+      value: String(index),
+      selected: option === selected,
+      text: `${option.provider} / ${option.model}`,
+    })));
+    if (!options.length) route.append(h("option", { value: "", text: "No route available" }));
+    route.disabled = !options.length;
   }
+
+  route.addEventListener("change", () => {
+    selected = options[Number(route.value)] || null;
+    renderAuthModes();
+    resetConfirmation();
+  });
+  auth.addEventListener("change", () => {
+    authMode = auth.value;
+    resetConfirmation();
+  });
 
   function resetConfirmation() {
     costConfirmation.checked = false;
@@ -208,21 +211,31 @@ export function mountGenerateView({ store, announce, navigate }) {
     }
     const project = store.getState().project;
     submit.disabled = true;
-    submit.textContent = "Queueing…";
+    submitLabel.textContent = "Queueing…";
     try {
-      await queueGeneration(project.project_id, project.revision, {
+      const result = await queueGeneration(project.project_id, project.revision, {
         provider: selected.provider,
         model: selected.model,
         auth_mode: authMode,
       });
-      announce("Generation queued. It appears on the render board.", "success");
+      const outcome = queueOutcome(result?.jobs);
+      if (outcome.fresh) {
+        announce(`Queued ${plural(outcome.fresh, "job")}. Watch it on the render board.`, "success");
+      } else if (outcome.existing) {
+        announce(
+          `Nothing new was queued: this route already has ${plural(outcome.existing, "job")} for revision ${project.revision} (${outcome.existingStates.map((state) => stateLabel(state).toLowerCase()).join(", ")}). Retry a failed job from the board, or save a changed plan to start a new revision.`,
+          "error",
+        );
+      } else {
+        announce("The server queued nothing for this route.", "error");
+      }
       resetConfirmation();
       await refresh();
     } catch (error) {
       announce(error.message, "error");
       submit.disabled = !confirmed;
     } finally {
-      submit.textContent = "Queue generation";
+      submitLabel.textContent = "Queue";
     }
   });
 
@@ -481,6 +494,7 @@ export function mountGenerateView({ store, announce, navigate }) {
     for (const { lane, count, list } of Object.values(laneNodes)) {
       const jobs = lanes[lane.key];
       count.textContent = String(jobs.length);
+      count.dataset.count = String(jobs.length);
       replace(list, jobs.length
         ? jobs.map((job) => jobCard(job, state.project))
         : h("li", { class: "lane-empty", text: lane.empty }));

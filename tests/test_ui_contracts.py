@@ -154,8 +154,10 @@ class ConfirmationContractTests(unittest.TestCase):
         generate = self.sources["js/views/generate.js"]
         guard = generate.index("confirmed !== fingerprint")
         self.assertLess(guard, generate.index("await queueGeneration("))
-        for control in ("authMode = mode;", "selected = option;"):
-            block = generate[generate.index(control) : generate.index(control) + 120]
+        # Changing the route or the authentication mode clears the confirmation.
+        for control in ('route.addEventListener("change"', 'auth.addEventListener("change"'):
+            start = generate.index(control)
+            block = generate[start : generate.index("});", start)]
             self.assertIn("resetConfirmation()", block)
 
     def test_promotion_switch_and_export_go_through_a_confirmation_dialog(self) -> None:
@@ -211,11 +213,19 @@ class AccessibilityContractTests(unittest.TestCase):
 
     def test_focus_is_visible_and_motion_respects_the_user(self) -> None:
         self.assertRegex(self.styles, r":focus-visible\s*\{[^}]*outline:\s*2px solid")
-        # Only the programmatic focus target drops the default ring, and it
-        # replaces it for keyboard focus.
+        # Only two places drop the default ring, and each replaces it: the
+        # programmatic focus target, and the composer's two text fields, whose
+        # whole composer shows a ring while either one has focus.
         suppressed = re.findall(r"([^{}]+)\{[^}]*outline:\s*(?:none|0)\b", self.styles)
-        self.assertEqual(["#stage"], [selector.strip() for selector in suppressed])
+        self.assertEqual(
+            [
+                "#stage",
+                ".composer .composer-title:focus-visible, .composer .composer-input:focus-visible",
+            ],
+            [selector.strip().splitlines()[-1].strip() for selector in suppressed],
+        )
         self.assertRegex(self.styles, r"#stage:focus-visible\s*\{[^}]*outline:\s*2px solid")
+        self.assertRegex(self.styles, r"\.composer:focus-within\s*\{[^}]*box-shadow:[^}]*0 0 0 4px")
         reduced = self.styles.split("@media (prefers-reduced-motion: reduce)", 1)[1]
         self.assertRegex(reduced, r"animation-duration:\s*0\.01ms")
         self.assertRegex(reduced, r"transition-duration:\s*0\.01ms")
@@ -228,10 +238,10 @@ class AccessibilityContractTests(unittest.TestCase):
         light_block = self.styles.split(':root[data-theme="light"] {', 1)[1].split("}", 1)[0]
         light = {**dark, **theme_tokens(light_block)}
         overridden = set(theme_tokens(light_block))
-        for token in ("bg", "surface", "raise", "field", "text", "dim", "faint", "cyan", "ok", "bad"):
+        for token in ("bg", "surface", "raise", "field", "text", "dim", "faint", "cyan", "ok", "bad", "amber-text"):
             self.assertIn(token, overridden, f"light theme does not set --{token}")
         for name, tokens in (("dark", dark), ("light", light)):
-            for text in ("text", "dim", "faint", "cyan", "ok", "bad"):
+            for text in ("text", "dim", "faint", "cyan", "ok", "bad", "amber-text"):
                 for surface in ("bg", "surface", "raise", "field"):
                     with self.subTest(theme=name, text=text, surface=surface):
                         self.assertGreaterEqual(contrast_ratio(tokens[text], tokens[surface]), 4.5)

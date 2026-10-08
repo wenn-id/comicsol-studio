@@ -42,7 +42,7 @@ const BLANK_HINTS = Object.freeze({
 
 const controlId = (key) => `plan-${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 
-function chips(values, className = "chip") {
+function chips(values, className = "tag") {
   if (!values.length) return null;
   return h("ul", { class: "chips" }, values.map((value) => h("li", { class: className, text: value })));
 }
@@ -86,7 +86,7 @@ function renderStory(value) {
           h("h4", { text: [scene.location || scene.id, scene.time].filter(Boolean).join(" · ") }),
           scene.purpose ? h("p", { text: scene.purpose }) : null,
           scene.anchor ? h("p", { class: "scene-anchor" }, h("strong", { text: "Continuity " }), scene.anchor) : null,
-          chips(scene.characters, "chip chip-cast"),
+          chips(scene.characters, "tag tag-cast"),
         )),
       )
       : null,
@@ -114,10 +114,10 @@ function renderCharacters(value) {
         ? h("dl", { class: "fact-list" }, card.look.map(([label, detail]) => [h("dt", { text: label }), h("dd", { text: detail })]))
         : null,
       card.speech ? h("p", { class: "cast-line" }, h("strong", { text: "Speaks in " }), card.speech) : null,
-      card.palette.length ? h("div", { class: "cast-row" }, h("span", { class: "cast-label", text: "Palette" }), chips(card.palette, "chip chip-swatch")) : null,
+      card.palette.length ? h("div", { class: "cast-row" }, h("span", { class: "cast-label", text: "Palette" }), chips(card.palette, "tag")) : null,
       card.props.length ? h("div", { class: "cast-row" }, h("span", { class: "cast-label", text: "Props" }), chips(card.props)) : null,
       card.invariants.length ? h("div", { class: "cast-row" }, h("span", { class: "cast-label", text: "Always" }), chips(card.invariants)) : null,
-      card.avoid.length ? h("div", { class: "cast-row" }, h("span", { class: "cast-label", text: "Never" }), chips(card.avoid, "chip chip-avoid")) : null,
+      card.avoid.length ? h("div", { class: "cast-row" }, h("span", { class: "cast-label", text: "Never" }), chips(card.avoid, "tag tag-avoid")) : null,
     )),
   );
 }
@@ -140,7 +140,7 @@ function panelDetail(page, panel) {
     facts.length
       ? h("dl", { class: "fact-list" }, facts.map(([label, detail]) => [h("dt", { text: label }), h("dd", { text: detail })]))
       : null,
-    chips(panel.characters, "chip chip-cast"),
+    chips(panel.characters, "tag tag-cast"),
     panel.lettering.length
       ? h(
         "ul",
@@ -414,6 +414,9 @@ export function mountPlanView({ store, announce, navigate, setFocusMode, refresh
     tabs[next].focus();
   });
 
+  // The action dock only appears while there are edits to review.
+  const binderFoot = h("footer", { class: "binder-foot", hidden: true }, changeSummary, h("div", { class: "actions" }, resetButton, reviewButton));
+
   const binder = h(
     "section",
     { class: "panel panel-marked binder", "aria-label": "Plan documents" },
@@ -425,7 +428,7 @@ export function mountPlanView({ store, announce, navigate, setFocusMode, refresh
       tidyButton,
     ),
     form,
-    h("footer", { class: "binder-foot" }, changeSummary, h("div", { class: "actions" }, resetButton, reviewButton)),
+    binderFoot,
   );
 
   // Draft review
@@ -470,7 +473,7 @@ export function mountPlanView({ store, announce, navigate, setFocusMode, refresh
         "div",
         {},
         h("p", { class: "eyebrow", text: "02 / Plan" }),
-        h("h1", { text: "Shape the story" }),
+        h("h1", { class: "display display-md", text: "Shape the story" }),
         h(
           "p",
           { class: "stage-facts" },
@@ -504,6 +507,7 @@ export function mountPlanView({ store, announce, navigate, setFocusMode, refresh
     reviewButton.textContent = draftCurrent ? "Draft up to date" : draft?.origin === "creator" ? "Update draft" : "Review changes";
     staleNote.hidden = !(draft?.origin === "creator" && !draftCurrent);
     reviewButton.disabled = promotionPending || !dirty.length || draftCurrent;
+    binderFoot.hidden = !dirty.length;
     resetButton.disabled = promotionPending || !dirty.length;
     for (const control of Object.values(controls)) control.readOnly = promotionPending;
   }

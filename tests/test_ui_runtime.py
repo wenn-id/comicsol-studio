@@ -151,6 +151,11 @@ const option = {{ provider: "agent", model: "m" }};
 check(j.routeFingerprint(option, "agent") !== j.routeFingerprint(option, "hosted"), "auth mode is part of the route");
 check(j.routeFingerprint(null, "agent") === null, "no route, no fingerprint");
 check(j.costText({{ amount: 0.04, currency: "USD", unit: "image" }}) === "0.04 USD per image" && j.costText(null) === null, "cost text");
+const repeat = j.queueOutcome([job("cancelled"), job("accepted")]);
+check(repeat.fresh === 0 && repeat.existing === 2 && repeat.existingStates.join() === "cancelled,accepted", "a repeated queue is not fresh work");
+const fresh = j.queueOutcome([job("queued"), job("validating", {{ artifact_state: "staged" }}), job("failed")]);
+check(fresh.fresh === 2 && fresh.existing === 1, "queued and staged jobs count as fresh");
+check(j.queueOutcome(undefined).fresh === 0 && j.queueOutcome(undefined).existing === 0, "a missing job list is empty");
 """)
 
     def test_qa_findings_group_by_area_and_commands_filter(self) -> None:
