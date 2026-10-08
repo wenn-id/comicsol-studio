@@ -4,10 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Comic Sol Studio</title>
-  <meta name="description" content="Comic Sol Studio turns your story into a lettered, print-ready comic on your own machine. Plan it, render it with the image model you choose, review every panel, and bind a verified PDF.">
+  <meta name="description" content="Make a print-ready comic on your own machine. Write the story, plan the panels, upload or render artwork, and review the pages before exporting a PDF.">
   <meta name="theme-color" content="#08090b">
   <link rel="icon" href="/assets/img/mark.svg" type="image/svg+xml">
-  <link rel="preload" href="/assets/fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/Manrope-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="modulepreload" href="/assets/vendor/three.core.min.js">
   <link rel="modulepreload" href="/assets/vendor/three.module.min.js">
@@ -24,11 +23,11 @@
       <span class="wordmark__sub">Studio</span>
     </a>
     <nav class="masthead__nav" aria-label="Sections">
-      <a href="#making">The making</a>
-      <a href="#engine">The engine</a>
-      <a href="#run">Run it</a>
+      <a href="#making">Workflow</a>
+      <a href="#engine">Page layouts</a>
+      <a href="#run">Local setup</a>
     </nav>
-    <a class="button button--amber button--small" href="/studio/">Open the Studio</a>
+    <a class="button button--ghost button--small" href="/studio/">Open Studio</a>
   </header>
 
   <main id="main">
@@ -39,40 +38,38 @@
         <div class="hero__veil" aria-hidden="true"></div>
 
         <div class="hero__copy" data-chapter="0">
-          <p class="hero__kicker">A studio for the Comic Sol engine</p>
+          <p class="hero__kicker">Comic-making, on your own machine</p>
           <h1 class="hero__title" id="hero-title">
-            Every page,<br><em>bound by you.</em>
+            Make a comic<br><em>you can print.</em>
           </h1>
           <p class="hero__lede">
-            Write a story, shape the cast and the storyboard, render panels with the image
-            model you choose, and review each one. The engine letters the balloons, composes
-            the pages, and binds a verified PDF. All of it runs on your own machine.
+            Write the story and plan each panel. Bring your own artwork or render it with
+            a connected model. Review the pages, then export a lettered PDF.
           </p>
           <div class="hero__actions">
-            <a class="button button--amber" href="/studio/">Open the Studio</a>
-            <a class="button button--ghost" href="#making">See how a page is made</a>
+            <a class="button button--amber" href="/studio/">Open Studio</a>
+            <a class="hero__workflow-link" href="#making">See the workflow</a>
           </div>
         </div>
 
         <ol class="hero__chapters" aria-label="What happens as the book opens">
           <li class="chapter" data-chapter="1">
             <span class="chapter__index">I</span>
-            <p class="chapter__title">The plan opens the book.</p>
-            <p class="chapter__text">A logline, a cast with fixed visual traits, and a storyboard laid
-              out on five exact page layouts. The engine validates every field.</p>
+            <p class="chapter__title">Start with the story.</p>
+            <p class="chapter__text">Write the scenes, define your characters, and decide what
+              happens in each panel.</p>
           </li>
           <li class="chapter" data-chapter="2">
             <span class="chapter__index">II</span>
-            <p class="chapter__title">Panels arrive one by one.</p>
-            <p class="chapter__text">Character references first, then every panel at its exact size,
-              each prompt carrying the same identity lock. Upload your own art or render with a
-              connected model.</p>
+            <p class="chapter__title">Make the artwork.</p>
+            <p class="chapter__text">Approve the character references, then upload or render
+              the panels. Check each image against the storyboard.</p>
           </li>
           <li class="chapter" data-chapter="3">
             <span class="chapter__index">III</span>
-            <p class="chapter__title">Lettered, composed, bound.</p>
-            <p class="chapter__text">Balloons are drawn by the engine with tails aimed at the speaker,
-              pages are composed, and every page of the PDF is checked before it is yours.</p>
+            <p class="chapter__title">Read the finished page.</p>
+            <p class="chapter__text">Comic Sol adds balloons and assembles the pages. Review the
+              lettering before exporting the PDF.</p>
           </li>
         </ol>
 
@@ -80,41 +77,35 @@
           <span class="hero__progress-fill" data-progress></span>
         </div>
         <p class="hero__scroll-hint" data-scroll-hint aria-hidden="true">Scroll to open the book</p>
+        <p class="hero__specimen">Illustrated specimen, drawn in the browser</p>
       </div>
     </section>
 
     <section class="making" id="making" aria-labelledby="making-title">
       <div class="making__intro">
-        <p class="eyebrow">The making of a page</p>
-        <h2 id="making-title" class="display">From one sentence<br>to a bound book.</h2>
-        <p class="making__lede">The engine moves a project through a fixed lifecycle. Studio shows you
-          where you are, what the engine needs next, and refuses nothing silently: when a step is
-          not ready, it tells you why.</p>
+        <p class="eyebrow">The workflow</p>
+        <h2 id="making-title" class="display">A page takes<br>more than a prompt.</h2>
+        <p class="making__lede">You decide what goes into the comic. Studio keeps the story,
+          artwork, and reviews together, and shows what needs attention before the next step.</p>
       </div>
 
       <ol class="lifecycle" aria-label="Project lifecycle">
         <li class="stage">
-          <p class="stage__status">INIT</p>
           <h3 class="stage__name">Begin</h3>
-          <p>A short prompt, a pasted story up to 200 KB, one of the engine's starter comics, or a
-            portable archive from another machine.</p>
+          <p>Start with an idea, paste a story, choose a starter comic, or import an archive.</p>
         </li>
         <li class="stage">
-          <p class="stage__status">PLANNED · SCRIPTED · STORYBOARDED</p>
           <h3 class="stage__name">Plan</h3>
-          <p>Story beats, two to five scenes, a cast with visual fingerprints, and one to four pages
-            of panels. Draft it with Claude or GPT, or write it yourself in the plan editor.</p>
+          <p>Write the scenes and cast, then lay out one to four pages. Draft with a connected
+            model or work directly in the editor.</p>
         </li>
         <li class="stage">
-          <p class="stage__status">REFERENCES_READY · PANELS_READY</p>
           <h3 class="stage__name">Render</h3>
-          <p>Reference sheets you approve, then panels at the exact pixel size of their frame.</p>
+          <p>Approve character references. Upload your artwork or render panels to fit their frames.</p>
         </li>
         <li class="stage stage--wide">
-          <p class="stage__status">QA_READY</p>
           <h3 class="stage__name">Review</h3>
-          <p>Every panel is judged on seven checks before it can be lettered, and every character on
-            seven traits. Evidence has to name what is actually in the image.</p>
+          <p>Check each panel against the plan. Accept it, leave a warning, or send it back for another attempt.</p>
           <ul class="checklist" aria-label="Panel checks">
             <li>character identity</li>
             <li>anatomy</li>
@@ -126,24 +117,22 @@
           </ul>
         </li>
         <li class="stage">
-          <p class="stage__status">LETTERED · COMPOSED</p>
           <h3 class="stage__name">Letter and compose</h3>
-          <p>Balloons, captions, and lettered effects drawn by the engine in Comic Neue, then pages
-            assembled and checked for clipped text and crowding.</p>
+          <p>Comic Sol places balloons, captions, and sound effects. Read the assembled pages
+            and check the lettering.</p>
         </li>
         <li class="stage">
-          <p class="stage__status">EXPORTED · COMPLETE</p>
-          <h3 class="stage__name">Bind</h3>
-          <p>A PDF whose every page is decoded and verified, a QA report, and an archive that opens
-            in any Comic Sol install.</p>
+          <h3 class="stage__name">Export</h3>
+          <p>Download the checked PDF and review report. Save an archive to carry the project
+            to another Comic Sol install.</p>
         </li>
       </ol>
     </section>
 
     <section class="engine" id="engine" aria-labelledby="engine-title">
       <div class="engine__head">
-        <p class="eyebrow">The engine underneath</p>
-        <h2 id="engine-title" class="display">Exact where it matters.</h2>
+        <p class="eyebrow">Page layouts</p>
+        <h2 id="engine-title" class="display">Give each scene<br>the space it needs.</h2>
       </div>
 
       <figure class="layouts" aria-labelledby="layouts-caption">
@@ -156,46 +145,44 @@
 
       <div class="facts">
         <article class="fact fact--lead">
-          <h3>One identity, every panel.</h3>
-          <p>The engine derives an identity pack from your cast and writes the same identity lock into
-            every panel prompt, with the approved reference sheets attached in a fixed order. A retry
-            asks for the same character, not a paraphrase of one.</p>
+          <h3>Keep the cast consistent.</h3>
+          <p>Your character descriptions and approved references accompany each panel prompt.
+            When you retry a panel, Comic Sol reuses those same details.</p>
         </article>
         <article class="fact">
-          <h3>Lettering is never generated.</h3>
-          <p>Image models are told to leave room and draw no words. The engine sets every balloon
-            itself and refuses text that does not fit its panel.</p>
+          <h3>Set the lettering separately.</h3>
+          <p>Panel prompts ask for text-free art. Comic Sol adds the words from your script
+            and flags text that does not fit.</p>
         </article>
         <article class="fact">
-          <h3>Revisions you can trust.</h3>
-          <p>Every write is tied to the version you were looking at. If an agent or another window
-            changed the project, Studio stops and shows you the newer one.</p>
+          <h3>Keep edits in sync.</h3>
+          <p>If another window or tool changes a project, Studio loads the newer version
+            before you can overwrite it.</p>
         </article>
       </div>
     </section>
 
     <section class="run" id="run" aria-labelledby="run-title">
       <div class="run__copy">
-        <p class="eyebrow">Run it</p>
-        <h2 id="run-title" class="display">Your machine,<br>your keys.</h2>
-        <p>Studio listens on 127.0.0.1 only. Projects are folders you own. Model keys stay in the
-          environment you start Studio from and never reach the page. Without any key, every step
-          still works: upload your own art and review it yourself.</p>
+        <p class="eyebrow">Local setup</p>
+        <h2 id="run-title" class="display">Keep the studio<br>on your desk.</h2>
+        <p>Install Studio from its source repository and open it in your browser. Projects stay
+          in your chosen data folder. Connected models receive the material needed for their task.</p>
+        <p><a href="https://github.com/wenn-id/comicsol-studio#run-it">Read the installation instructions</a></p>
       </div>
       <div class="run__code">
-        <p class="run__label" id="run-label">Start Studio</p>
+        <p class="run__label" id="run-label">Inside the cloned repository, with your environment active</p>
         <pre aria-labelledby="run-label"><code>pip install -e .
 comicsol-studio --data-root /absolute/path/to/studio-data</code></pre>
-        <p class="run__label" id="keys-label">Optional model routes</p>
-        <pre aria-labelledby="keys-label"><code>ANTHROPIC_API_KEY=…   plan drafts and visual review with Claude
-OPENAI_API_KEY=…      plan drafts, review, and panel rendering</code></pre>
+        <dl class="model-routes" aria-label="Optional model connections">
+          <div><dt>Claude</dt><dd>Plan drafts and visual review</dd></div>
+          <div><dt>OpenAI</dt><dd>Plan drafts, visual review, and panel rendering</dd></div>
+        </dl>
+        <p class="run__note">Keys stay on the server. You can also write the plan, upload art,
+          and review it yourself without connecting a model.</p>
       </div>
     </section>
 
-    <section class="closer" aria-labelledby="closer-title">
-      <h2 id="closer-title" class="closer__title">Open the book.</h2>
-      <a class="button button--amber button--large" href="/studio/">Open the Studio</a>
-    </section>
   </main>
 
   <footer class="footer">

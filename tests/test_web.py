@@ -49,6 +49,13 @@ class ContrastTests(unittest.TestCase):
             with self.subTest(theme=theme):
                 self.assertGreaterEqual(contrast(values["on-amber"], values["amber"]), 4.5)
 
+    def test_controls_and_focus_are_visible_in_both_themes(self) -> None:
+        for theme, values in self.themes().items():
+            for surface in ("obsidian", "ink-1", "ink-2", "ink-3"):
+                with self.subTest(theme=theme, surface=surface):
+                    self.assertGreaterEqual(contrast(values["control-edge"], values[surface]), 3)
+                    self.assertGreaterEqual(contrast(values["amber-text"], values[surface]), 3)
+
 
 class SourceRuleTests(unittest.TestCase):
     def sources(self):
@@ -87,6 +94,31 @@ class SourceRuleTests(unittest.TestCase):
 
 
 class ModuleTests(unittest.TestCase):
+    def test_icon_only_button_has_an_accessible_name(self) -> None:
+        run_node(
+            self,
+            """
+            import assert from 'node:assert/strict';
+            import { button } from './assets/js/console/ui.js';
+            globalThis.Node = class {
+                attributes = new Map();
+                children = [];
+                setAttribute(key, value) { this.attributes.set(key, value); }
+                append(child) { this.children.push(child); }
+            };
+            globalThis.document = {
+                createElement: () => new Node(),
+                createElementNS: () => new Node(),
+                createTextNode: (text) => Object.assign(new Node(), { textContent: text }),
+            };
+            const remove = button('', { iconName: 'trash', title: 'Remove page' });
+            assert.equal(remove.attributes.get('aria-label'), 'Remove page');
+            const save = button('Save plan', { title: 'Save your changes' });
+            assert.equal(save.attributes.has('aria-label'), false);
+            assert.equal(save.children[0].children[0].textContent, 'Save plan');
+            """,
+        )
+
     def test_plan_model(self) -> None:
         layouts = json.dumps(engine.layouts())
         run_node(

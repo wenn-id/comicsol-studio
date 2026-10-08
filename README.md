@@ -146,26 +146,29 @@ MOTION 1.
 
 - Obsidian keeps the artwork the brightest thing on screen. Amber marks the primary action
   and the current stage only. Ivory is the paper the comics print on.
-- Instrument Serif carries the luxury voice in display type; Manrope's squared geometry and
-  tabular figures carry the tool. Comic Neue appears only where lettering is previewed,
-  because it is the engine's lettering face.
+- Manrope carries the interface and specimen cover, with restrained sizes and weight changes
+  rather than a second display face. The owner requested simpler, modern typography.
+  Comic Neue appears only where lettering is previewed, because it is the engine's face.
 - The hero is a softcover comic drawn in the browser: a laminated cover that bows as it
   opens, pages that curl as they turn, interior pages laid out on the engine's five page
   layouts. It renders only when the scroll or pointer changes, eases by time rather than by
   frame, shows a still of the open book with reduced motion, and a poster without WebGL.
 - The console is 2D on purpose: forms, filmstrips, and paper sheets, with motion limited to
-  state changes.
+  state changes. Flat editor sections keep the artwork and next action visible; technical
+  lifecycle detail is available in a disclosure. Mobile navigation retains stage names.
 - Day theme is a full printed-paper palette with its own text-safe amber. Both themes pass
   WCAG AA for every text token on every surface (tested).
 - The favicon mark is a placeholder drawn from a page layout; replace it with the official
   mark when one exists.
+
+The [October 9 refinement audit](anti-slop/audit-001-2026-10-09.md) records the changes,
+their reasons, and the validation scope.
 
 ## Bundled third-party files
 
 | File | Source | License |
 | --- | --- | --- |
 | `web/assets/vendor/three.module.min.js`, `three.core.min.js` | `three@0.185.1` from npm (`build/`), SHA-256 `86bcee24…beb6` and `05b26093…a90` | MIT (`three-LICENSE.txt`) |
-| `web/assets/fonts/InstrumentSerif-*.woff2` | `google/fonts` `ofl/instrumentserif` at `5e8a3ba`, subset to Latin with fonttools | SIL OFL 1.1 |
 | `web/assets/fonts/Manrope-Variable.woff2` | `google/fonts` `ofl/manrope/Manrope[wght].ttf` at `5e8a3ba`, subset to Latin | SIL OFL 1.1 |
 | `web/assets/fonts/ComicNeue-Bold.ttf` | `wenn-id/comicsol` `assets/fonts` | SIL OFL 1.1 |
 

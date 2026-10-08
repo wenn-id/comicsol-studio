@@ -575,7 +575,7 @@ export function drawCover() {
   ctx.fillStyle = "#eee7d8";
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = '400 214px "Instrument Serif", Georgia, serif';
+  ctx.font = '650 178px "Manrope", sans-serif';
   ctx.fillText("Comic Sol", 52, 232);
   ctx.fillStyle = AMBER;
   ctx.fillRect(58, 262, W - 116, 4);
@@ -584,7 +584,7 @@ export function drawCover() {
   ctx.fillText("STUDIO EDITION", 60, 312);
   ctx.textAlign = "right";
   ctx.fillText("No. 01", W - 60, 312);
-  ctx.font = 'italic 400 64px "Instrument Serif", Georgia, serif';
+  ctx.font = '500 56px "Manrope", sans-serif';
   ctx.textAlign = "left";
   ctx.fillText("Every page,", 60, H - 190);
   ctx.fillText("bound by you.", 60, H - 124);
@@ -617,7 +617,7 @@ export function drawBackCover() {
   ctx.stroke();
   ctx.fillStyle = "#bdb6a8";
   ctx.textAlign = "center";
-  ctx.font = '400 54px "Instrument Serif", Georgia, serif';
+  ctx.font = '600 48px "Manrope", sans-serif';
   ctx.fillText("Comic Sol Studio", W / 2, H * 0.7);
   grain(ctx, W, H, 0.1);
   return element;
@@ -633,7 +633,7 @@ export function drawInsideCover({ mirrored = false } = {}) {
   paper(ctx, W, H, "#ece4d2");
   ctx.fillStyle = "#6f6656";
   ctx.textAlign = "left";
-  ctx.font = '400 40px "Instrument Serif", Georgia, serif';
+  ctx.font = '600 36px "Manrope", sans-serif';
   ctx.fillText("Comic Sol Studio", 90, H - 260);
   ctx.font = '500 20px "Manrope", sans-serif';
   const lines = [
@@ -662,8 +662,7 @@ export function drawEdge() {
 export async function fontsReady() {
   if (!document.fonts) return;
   await Promise.allSettled([
-    document.fonts.load('400 120px "Instrument Serif"'),
-    document.fonts.load('italic 400 60px "Instrument Serif"'),
+    document.fonts.load('650 178px "Manrope"'),
     document.fonts.load('700 30px "Comic Neue"'),
     document.fonts.load('600 20px "Manrope"'),
   ]);

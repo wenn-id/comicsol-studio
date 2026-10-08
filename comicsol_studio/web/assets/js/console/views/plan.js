@@ -304,7 +304,7 @@ function plannerBar(ctx, draft) {
     return h(
       "p",
       { class: "hint-line" },
-      "Write the plan here, start from an engine starter, or set ANTHROPIC_API_KEY or OPENAI_API_KEY before starting Studio to let a model draft it.",
+      "Write the plan here or use a starter. To draft with a model, connect one when launching Studio.",
     );
   }
   const running = (ctx.project.runs || []).find((run) => run.kind === "plan-draft" && (run.status === "queued" || run.status === "running"));
@@ -319,7 +319,7 @@ function plannerBar(ctx, draft) {
       "div",
       { class: "planner-bar__actions" },
       planners.map((planner) => {
-        const start = button(`Draft with ${providerName(planner.id)}`, { kind: "ghost", size: "small", iconName: "spark" });
+        const start = button(`Draft with ${providerName(planner.id)}`, { kind: "ghost", size: "small" });
         start.addEventListener("click", async () => {
           const ok = await confirmDialog({
             title: `Draft the plan with ${providerName(planner.id)}?`,
@@ -1000,4 +1000,3 @@ function jsonEditor({ draft, structural }) {
 export function forgetPlanDraft(projectId) {
   drafts.delete(projectId);
 }
-

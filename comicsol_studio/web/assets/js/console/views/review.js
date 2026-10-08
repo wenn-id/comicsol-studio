@@ -124,7 +124,7 @@ export function renderReview(container, ctx) {
 }
 
 function header() {
-  return h("header", { class: "page__head" }, h("div", {}, h("p", { class: "page__eyebrow" }, "Review"), h("h1", { class: "page__title" }, "Judge every panel, then every page")));
+  return h("header", { class: "page__head" }, h("div", {}, h("p", { class: "page__eyebrow" }, "Review"), h("h1", { class: "page__title" }, "Check the artwork"), h("p", { class: "page__sub" }, "Review each panel, then read the composed pages.")));
 }
 
 function decisionTone(decision) {
@@ -252,7 +252,7 @@ function panelSheet(ctx, state, panel, context, key, rerender) {
       )
     : null;
 
-  const fill = button("Pass everything, with notes from the plan", { kind: "ghost", size: "small", iconName: "check" });
+  const fill = button("Fill passing checks from the plan", { kind: "ghost", size: "small", iconName: "check" });
   fill.addEventListener("click", () => {
     const evidence = planEvidence(context);
     for (const [id, entry] of Object.entries(sheet.checks)) {
@@ -591,4 +591,3 @@ function pageSheet(ctx, state, page, context, key, rerender) {
     ),
   );
 }
-

@@ -9,7 +9,7 @@ const nextId = (prefix) => `${prefix}-${++fieldCounter}`;
 export function button(label, { kind = "quiet", iconName, onClick, type = "button", disabled, title, size } = {}) {
   return h(
     "button",
-    { type, class: `btn btn--${kind}${size ? ` btn--${size}` : ""}`, onclick: onClick, disabled, title },
+    { type, class: `btn btn--${kind}${size ? ` btn--${size}` : ""}`, onclick: onClick, disabled, title, "aria-label": label ? null : title },
     iconName ? icon(iconName, 16) : null,
     label ? h("span", {}, label) : null,
   );

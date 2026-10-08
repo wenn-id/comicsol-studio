@@ -331,7 +331,7 @@ export async function createBook(canvas, { onReady } = {}) {
     state.height = height;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    camera.fov = width / height < 0.9 ? 40 : 30;
+    camera.fov = width / height < 0.9 ? 40 : 36;
     camera.updateProjectionMatrix();
     state.dirty = true;
   }

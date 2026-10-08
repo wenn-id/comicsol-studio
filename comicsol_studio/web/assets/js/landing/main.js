@@ -36,6 +36,7 @@ function showChapter(index) {
   copy.toggleAttribute("inert", index !== 0);
   chapters.forEach((chapter) => {
     chapter.dataset.active = String(Number(chapter.dataset.chapter) === index);
+    chapter.setAttribute("aria-hidden", String(Number(chapter.dataset.chapter) !== index));
   });
 }
 
@@ -52,6 +53,9 @@ async function showPoster() {
   poster.replaceChildren(image);
   showChapter(0);
 }
+
+// Keep a cover visible while WebGL loads, including devices without WebGL.
+await showPoster();
 
 async function startBook() {
   const { createBook } = await import("./book.js");
@@ -167,7 +171,13 @@ function renderLayouts(engine) {
       }
       const caption = document.createElement("figcaption");
       caption.className = "layout__name";
-      caption.textContent = name;
+      caption.textContent = {
+        "full-page": "Full page",
+        "two-horizontal": "Two rows",
+        "three-horizontal": "Three rows",
+        "hero-top-two-bottom": "Wide panel above",
+        "two-top-hero-bottom": "Wide panel below",
+      }[name] || name;
       figure.append(svg, caption);
       return figure;
     }),
@@ -197,6 +207,4 @@ if (webglAvailable()) {
     console.error("The 3D book could not start; showing the cover instead.", error);
     showPoster();
   });
-} else {
-  showPoster();
 }

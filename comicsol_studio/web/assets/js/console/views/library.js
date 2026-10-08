@@ -84,9 +84,9 @@ function cover(project) {
 function composerPanel(ctx, container) {
   const rerender = () => renderLibrary(container, ctx);
   const tabs = [
-    ["idea", "From an idea"],
-    ["starter", "From a starter"],
-    ["archive", "From an archive"],
+    ["idea", "Write an idea"],
+    ["starter", "Use a starter"],
+    ["archive", "Import archive"],
   ];
   const tabList = h(
     "div",
@@ -143,7 +143,7 @@ function ideaForm(ctx, rerender) {
   const bytes = utf8Length(composer.prompt);
   const limit = ctx.session.limits.sourceBytes;
   const counter = h("span", { class: `meter${bytes > limit ? " meter--over" : ""}` }, `${formatBytes(bytes)} of ${formatBytes(limit)}`);
-  const submit = button("Create the comic", { kind: "amber", type: "submit" });
+  const submit = button("Create comic", { kind: "amber", type: "submit" });
   const form = h(
     "form",
     {
@@ -183,7 +183,7 @@ function ideaForm(ctx, rerender) {
         },
         { required: true, rows: composer.mode === "short_prompt" ? 4 : 10, placeholder: composer.mode === "short_prompt" ? "Who, where, and what changes. One or two sentences is enough." : "Paste the story the comic should adapt." },
       ),
-      { wide: true, hint: "Kept exactly as written; the plan is drawn from it." },
+      { wide: true, hint: "Studio saves your original text alongside the plan." },
     ),
     h(
       "div",
@@ -214,7 +214,7 @@ function starterList(ctx) {
   return h(
     "div",
     {},
-    h("p", { class: "composer__note" }, "Complete comics from the engine's starter catalog. They open at the render stage with a finished plan you can still edit."),
+    h("p", { class: "composer__note" }, "Start with a prepared story and cast. You can edit the plan before making the artwork."),
     h(
       "ul",
       { class: "starters" },
@@ -276,4 +276,3 @@ function archiveForm(ctx, rerender) {
 export function resetLibrary() {
   library.projects = null;
 }
-

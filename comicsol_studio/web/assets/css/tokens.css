@@ -2,20 +2,6 @@
    Obsidian and amber are the owner's palette; ivory is the paper the comics print on. */
 
 @font-face {
-  font-family: "Instrument Serif";
-  src: url("../fonts/InstrumentSerif-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Instrument Serif";
-  src: url("../fonts/InstrumentSerif-Italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
   font-family: "Manrope";
   src: url("../fonts/Manrope-Variable.woff2") format("woff2");
   font-weight: 200 800;
@@ -40,6 +26,7 @@
   --ink-4: #262a31;
   --line: rgba(238, 231, 216, 0.09);
   --line-strong: rgba(238, 231, 216, 0.18);
+  --control-edge: #7e776b;
 
   --ivory: #eee7d8;
   --ivory-2: #bdb6a8;
@@ -60,13 +47,12 @@
   --paper: #f3eee3;
   --paper-ink: #16140f;
 
-  --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --sans: "Manrope", "Segoe UI", system-ui, sans-serif;
   --comic: "Comic Neue", "Comic Sans MS", cursive;
 
-  --r1: 6px;
-  --r2: 10px;
-  --r3: 18px;
+  --r1: 4px;
+  --r2: 6px;
+  --r3: 10px;
 
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -116,7 +102,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--amber);
+  outline: 2px solid var(--amber-text);
   outline-offset: 3px;
 }
 
