@@ -69,6 +69,43 @@ engine starter), upload your own images, and review them yourself.
 - `test_web.py`: WCAG AA contrast for every text token on every surface in both themes, no
   em dashes, no remote origins or inline scripts, focus rings kept, the book's layouts
   matching the engine, and the console's pure modules under Node.
+- `test_pages.py`: the Pages preview build rebases every link onto the project path, loads
+  the DEMO layer before the app, and leaves the shipped web files untouched.
+
+## Pages preview
+
+`pages/` builds a static preview of the real landing page and console for design review.
+GitHub Pages cannot run Studio, so the console's `/api/*` calls are answered in the
+browser by a DEMO layer (`pages/demo/mock.js`) that replays a recorded session. The
+recording comes from `pages/record.py`, which drives the actual Studio app and the pinned
+engine through the whole creator flow (create, plan, references, panels, panel and page
+reviews, compose, finish) with the engine's Sunlight Courier sample. Nothing in the replay
+is invented: every snapshot, review context, page image, and the PDF were produced by the
+engine. Panel and page images are stored as WebP to keep the preview light.
+
+In the preview, actions that match the next recorded step (prepare, upload, review,
+compose, finish, rename, trash) advance the replay. Anything else, such as an archive
+export or a plan the engine would have to validate, answers with a labelled DEMO message.
+A DEMO panel shows the current step and can step the replay forward or restart it.
+Nothing in `pages/` is part of the Python package.
+
+`.github/workflows/pages.yml` records and builds the preview on every push to `main` and
+on pull requests that touch Studio, and uploads it as the `studio-pages-preview`
+artifact. Publishing is off until the repository variable `PAGES_PUBLISH` is `true`; set
+it only after the Article 9 requirement above is met, then enable Pages with GitHub
+Actions as the source.
+
+To build it locally (the recording takes a few minutes):
+
+```bash
+python pages/record.py --sample /path/to/comicsol/samples/sunlight-courier --out recording
+python pages/build.py --recording recording --out _site/comicsol-studio --base /comicsol-studio/
+python -m http.server 8790 --directory _site
+```
+
+Then open `http://127.0.0.1:8790/comicsol-studio/`. A plain static server has no 404
+fallback, so reloading a deep console link only works on Pages; start from the landing page
+or `studio/`.
 
 ## How it is built
 

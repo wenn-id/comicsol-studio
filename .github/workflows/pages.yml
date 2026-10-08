@@ -1,0 +1,86 @@
+name: pages-preview
+
+# Builds the GitHub Pages preview: the real landing page and console with a DEMO layer
+# that replays a session recorded against the real Studio and the pinned engine.
+#
+# Every run uploads the built site as the "studio-pages-preview" artifact for review.
+# Publishing is off until the repository variable PAGES_PUBLISH is set to "true", which
+# should happen only after the wenn-id/comicsol AGENTS.md Article 9 requirement (adoption
+# summary or recorded maintainer waiver) is met. See README "Pages preview".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "pages/**"
+      - "comicsol_studio/**"
+      - "pyproject.toml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Studio and the pinned engine
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+      - name: Find the pinned engine commit
+        id: engine
+        run: |
+          ref=$(python -c "import re, tomllib; deps = tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']; print(next(re.search(r'comicsol@([0-9a-f]{40})', d).group(1) for d in deps if 'wenn-id/comicsol@' in d))")
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+      - name: Check out the engine sample at the same commit
+        uses: actions/checkout@v4
+        with:
+          repository: wenn-id/comicsol
+          ref: ${{ steps.engine.outputs.ref }}
+          path: engine
+          sparse-checkout: samples/sunlight-courier
+      - name: Record a real Studio session
+        run: python pages/record.py --sample engine/samples/sunlight-courier --out recording
+      - name: Build the preview site
+        run: |
+          node --check pages/demo/mock.js
+          python pages/build.py --recording recording --out _site --base "/${{ github.event.repository.name }}/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: studio-pages-preview
+          path: _site
+          include-hidden-files: true
+          retention-days: 14
+      - if: github.ref == 'refs/heads/main' && vars.PAGES_PUBLISH == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && vars.PAGES_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,88 @@
+/* DEMO panel for the GitHub Pages preview. Uses Studio's own tokens. */
+.demo-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 80;
+  width: max-content;
+  max-width: min(380px, calc(100vw - 32px));
+  border: 1px solid var(--amber-lo, #a57a2a);
+  border-radius: var(--r2, 10px);
+  background: var(--ink-2, #14161a);
+  color: var(--ivory, #eee7d8);
+  font: 13px/1.5 var(--sans, system-ui, sans-serif);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.demo-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 6px;
+}
+.demo-panel__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.demo-panel__toggle:focus-visible,
+.demo-panel__step:focus-visible,
+.demo-panel__actions button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus, 0 0 0 2px #d9a441);
+}
+.demo-panel__tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--amber, #d9a441);
+  color: var(--on-amber, #1a1307);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.demo-panel__title { font-weight: 700; white-space: nowrap; }
+.demo-panel__progress { margin-left: auto; color: var(--ivory-2, #bdb6a8); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.demo-panel__body { padding: 0 12px 12px; }
+.demo-panel[data-collapsed="true"] .demo-panel__body { display: none; }
+.demo-panel__body p { margin: 0 0 8px; color: var(--ivory-2, #bdb6a8); }
+.demo-panel__body .demo-panel__now { color: var(--ivory, #eee7d8); }
+.demo-panel__body .demo-panel__next { color: var(--amber-text, #e2b15a); }
+.demo-panel__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.demo-panel__actions button {
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 1px solid var(--line-strong, rgba(238, 231, 216, 0.18));
+  border-radius: 999px;
+  background: var(--ink-3, #1c1f25);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.demo-panel__step {
+  flex: none;
+  min-height: 30px;
+  padding: 3px 12px;
+  border: 1px solid var(--amber, #d9a441);
+  border-radius: 999px;
+  background: var(--amber, #d9a441);
+  color: var(--on-amber, #1a1307);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.demo-panel__step:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Studio's toasts share the bottom-right corner; lift them above the panel. */
+.toasts {
+  bottom: calc(var(--demo-panel-height, 0px) + 28px);
+}

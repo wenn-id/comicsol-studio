@@ -5,3 +5,5 @@ build/
 dist/
 .venv/
 .ruff_cache/
+_site/
+recording/
