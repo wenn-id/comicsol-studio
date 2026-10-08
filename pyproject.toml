@@ -35,6 +35,7 @@ comicsol_studio = [
     "web/assets/css/*.css",
     "web/assets/js/*.js",
     "web/assets/js/*/*.js",
+    "web/assets/js/*/*/*.js",
     "web/assets/vendor/*.js",
     "web/assets/vendor/*.txt",
     "web/assets/fonts/*.woff2",

@@ -191,7 +191,14 @@ class IndependenceTests(unittest.TestCase):
             if path.is_file():
                 relative = path.relative_to(PACKAGE).as_posix()
                 with self.subTest(file=relative):
-                    self.assertTrue(any(fnmatch.fnmatchcase(relative, p) for p in patterns), relative)
+                    # setuptools globs do not cross "/", so the depth must match too.
+                    self.assertTrue(
+                        any(
+                            fnmatch.fnmatchcase(relative, p) and p.count("/") == relative.count("/")
+                            for p in patterns
+                        ),
+                        relative,
+                    )
 
 
 if __name__ == "__main__":
