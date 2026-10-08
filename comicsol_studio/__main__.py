@@ -1,4 +1,4 @@
-"""Loopback launcher for Comic Sol Studio Next."""
+"""Loopback launcher for comicsol-studio."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from collections.abc import Sequence
 import uvicorn
 from comic_sol_web.config import DATA_ROOT_VAR, WebConfig, WebConfigError
 
-from comic_sol_studio_next.app import (
+from comicsol_studio.app import (
     UI_PATH,
     MissingBackendModuleError,
     create_studio_app,
@@ -21,8 +21,8 @@ DEFAULT_PORT = 8766
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="comic-sol-studio-next",
-        description="Run the single-user Comic Sol Studio Next on a loopback address.",
+        prog="comicsol-studio",
+        description="Run the single-user comicsol-studio on a loopback address.",
     )
     parser.add_argument(
         "--data-root",
@@ -46,7 +46,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (WebConfigError, MissingBackendModuleError) as error:
         parser.error(str(error))
 
-    print(f"Comic Sol Studio Next: http://{config.host}:{args.port}{UI_PATH}/", file=sys.stderr)
+    print(f"comicsol-studio: http://{config.host}:{args.port}{UI_PATH}/", file=sys.stderr)
     uvicorn.run(app, host=config.host, port=args.port, log_level="info")
     return 0
 

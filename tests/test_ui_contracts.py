@@ -1,4 +1,4 @@
-"""Static contracts for the Studio Next interface: safety, accessibility, drift."""
+"""Static contracts for the comicsol-studio interface: safety, accessibility, drift."""
 
 from __future__ import annotations
 
@@ -76,8 +76,8 @@ class InterfaceSafetyTests(unittest.TestCase):
                     self.assertIn(name, {"js/theme.js", "js/log.js"})
         keys = set()
         for name in ("js/theme.js", "js/log.js"):
-            keys |= set(re.findall(r'"(comic-sol-studio-next:[a-z-]+)"', self.sources[name]))
-        self.assertEqual({"comic-sol-studio-next:theme", "comic-sol-studio-next:log-open"}, keys)
+            keys |= set(re.findall(r'"(comicsol-studio:[a-z-]+)"', self.sources[name]))
+        self.assertEqual({"comicsol-studio:theme", "comicsol-studio:log-open"}, keys)
 
     def test_copy_has_no_em_dash(self) -> None:
         for path in ui_files():

@@ -2,7 +2,7 @@ import { workflowEventsUrl } from "/static/api.js";
 import { h, icon } from "./dom.js";
 import { clockTime, humanize, phaseLabel } from "./format.js";
 
-const OPEN_KEY = "comic-sol-studio-next:log-open";
+const OPEN_KEY = "comicsol-studio:log-open";
 const POLL_MS = 4000;
 const MAX_BACKOFF_MS = 30000;
 const MAX_EVENTS = 200;

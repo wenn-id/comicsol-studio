@@ -1,7 +1,7 @@
 import { h, icon, replace } from "./dom.js";
 
 // Only the theme choice is remembered. Project content never touches storage.
-const STORAGE_KEY = "comic-sol-studio-next:theme";
+const STORAGE_KEY = "comicsol-studio:theme";
 
 function readPreference() {
   try {

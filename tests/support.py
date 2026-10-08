@@ -1,4 +1,4 @@
-"""Shared helpers for the Studio Next test suite."""
+"""Shared helpers for the comicsol-studio test suite."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:  # pragma: no cover - plain checkout without an install
     sys.path.insert(0, str(ROOT))
 
-UI_DIR = ROOT / "comic_sol_studio_next" / "ui"
+UI_DIR = ROOT / "comicsol_studio" / "ui"
 JS_DIR = UI_DIR / "js"
 
 
@@ -50,7 +50,7 @@ def stage_modules(destination: Path) -> Path:
 
 def run_node(test_case: unittest.TestCase, script: str) -> None:
     node = shutil.which("node")
-    test_case.assertIsNotNone(node, "Node.js is required for the Studio Next runtime tests")
+    test_case.assertIsNotNone(node, "Node.js is required for the comicsol-studio runtime tests")
     assert node is not None
     completed = subprocess.run(
         [node, "--input-type=module", "--eval", script],

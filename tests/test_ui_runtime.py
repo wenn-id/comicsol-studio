@@ -15,7 +15,7 @@ class InterfaceRuntimeTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.staged = stage_modules(Path(tempfile.mkdtemp(prefix="studio-next-modules-")))
+        cls.staged = stage_modules(Path(tempfile.mkdtemp(prefix="comicsol-studio-modules-")))
 
     def module(self, relative: str) -> str:
         return json.dumps((self.staged / relative).as_uri())

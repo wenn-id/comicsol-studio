@@ -1,4 +1,4 @@
-"""Server composition and launcher contracts for Studio Next."""
+"""Server composition and launcher contracts for comicsol-studio."""
 
 from __future__ import annotations
 
@@ -12,14 +12,14 @@ from unittest import mock
 from comic_sol_web.config import WebConfig
 from fastapi.testclient import TestClient
 
-from comic_sol_studio_next import __main__ as launcher
-from comic_sol_studio_next import app as studio_app
+from comicsol_studio import __main__ as launcher
+from comicsol_studio import app as studio_app
 from tests.support import ROOT, UI_DIR, ui_files
 
 
 class StudioAppTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.data_root = Path(tempfile.mkdtemp(prefix="studio-next-"))
+        self.data_root = Path(tempfile.mkdtemp(prefix="comicsol-studio-"))
         config = WebConfig.local_from_env({"COMIC_SOL_WEB_DATA_ROOT": str(self.data_root)})
         self.client = TestClient(studio_app.create_studio_app(config))
 
@@ -50,7 +50,7 @@ class StudioAppTests(unittest.TestCase):
         self.assertIn(rejected.status_code, {401, 403})
 
     def test_missing_backend_module_fails_closed(self) -> None:
-        empty = Path(tempfile.mkdtemp(prefix="studio-next-static-"))
+        empty = Path(tempfile.mkdtemp(prefix="comicsol-studio-static-"))
         self.assertEqual(studio_app.BACKEND_MODULES, studio_app.missing_backend_modules(empty))
         config = WebConfig.local_from_env({"COMIC_SOL_WEB_DATA_ROOT": str(self.data_root)})
         with (
@@ -61,8 +61,8 @@ class StudioAppTests(unittest.TestCase):
 
     def test_package_data_declares_every_interface_file(self) -> None:
         project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-        patterns = project["tool"]["setuptools"]["package-data"]["comic_sol_studio_next"]
-        package = ROOT / "comic_sol_studio_next"
+        patterns = project["tool"]["setuptools"]["package-data"]["comicsol_studio"]
+        package = ROOT / "comicsol_studio"
         for path in ui_files():
             relative = path.relative_to(package).as_posix()
             with self.subTest(file=relative):
@@ -74,7 +74,7 @@ class StudioAppTests(unittest.TestCase):
 
 class LauncherTests(unittest.TestCase):
     def run_launcher(self, *arguments: str) -> mock.MagicMock:
-        data_root = tempfile.mkdtemp(prefix="studio-next-launch-")
+        data_root = tempfile.mkdtemp(prefix="comicsol-studio-launch-")
         with (
             mock.patch.object(launcher, "create_studio_app") as create,
             mock.patch.object(launcher.uvicorn, "run") as run,

@@ -1,4 +1,4 @@
-"""Compose the Studio Next interface on top of the comic-sol-web application.
+"""Compose the comicsol-studio interface on top of the comic-sol-web application.
 
 The interface owns no API, session, or project logic. It is mounted beside the
 unchanged comic-sol-web routes on the same origin, so the browser keeps using
@@ -63,5 +63,5 @@ def create_studio_app(
     def studio_root() -> RedirectResponse:
         return RedirectResponse(f"{UI_PATH}/", status_code=307)
 
-    app.mount(UI_PATH, RevalidatedStaticFiles(directory=str(UI_DIR), html=True), name="studio-next")
+    app.mount(UI_PATH, RevalidatedStaticFiles(directory=str(UI_DIR), html=True), name="comicsol-studio")
     return app

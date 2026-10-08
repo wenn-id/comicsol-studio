@@ -3,7 +3,7 @@ requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "comic-sol-studio-next"
+name = "comicsol-studio"
 dynamic = ["version"]
 description = "A creator-first Comic Sol Studio interface served on top of the comic-sol-web API"
 requires-python = ">=3.11"
@@ -14,16 +14,16 @@ dependencies = [
 ]
 
 [project.scripts]
-comic-sol-studio-next = "comic_sol_studio_next.__main__:main"
+comicsol-studio = "comicsol_studio.__main__:main"
 
 [tool.setuptools.dynamic]
-version = { attr = "comic_sol_studio_next.__version__" }
+version = { attr = "comicsol_studio.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["comic_sol_studio_next*"]
+include = ["comicsol_studio*"]
 
 [tool.setuptools.package-data]
-comic_sol_studio_next = [
+comicsol_studio = [
     "ui/index.html",
     "ui/css/*.css",
     "ui/js/*.js",

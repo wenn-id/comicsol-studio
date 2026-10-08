@@ -1,4 +1,4 @@
-# antislop delivery gate: Studio Next, first build (2026-10-08)
+# antislop delivery gate: comicsol-studio, first build (2026-10-08)
 
 Design read: four-stage production workspace for comic creators, night production room
 language, dial ENERGY 3 / RHYTHM 2 / MOTION 2. Direction came from the owner's choice of

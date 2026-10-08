@@ -1,10 +1,10 @@
-# Comic Sol Studio Next
+# comicsol-studio
 
 A new creator interface for [Comic Sol](https://github.com/wenn-id/comicsol): write a
 pitch, shape the plan, render panels, and check pages in one workspace built for long
 sessions.
 
-Studio Next is an interface only. It mounts beside the unchanged
+comicsol-studio is an interface only. It mounts beside the unchanged
 [`comic-sol-web`](https://github.com/wenn-id/comic-sol-studio) application on the same
 origin and reuses that application's API, loopback session, CSRF cookie, revision guards,
 and published browser client (`/static/api.js`, `/static/state.js`, `/static/webmcp.js`).
@@ -25,8 +25,12 @@ Python 3.11 with `comic-sol-web` installed from `wenn-id/comic-sol-studio` (buil
 tested against commit `21a0603`) plus its pinned engine, and Node.js for the tests.
 
 ```bash
-python -m comic_sol_studio_next --data-root /absolute/path/for/studio-data
+python -m comicsol_studio --data-root /absolute/path/for/studio-data
 ```
+
+After `pip install --no-deps -e .` the same launcher is also on the path as
+`comicsol-studio`. The distribution is named `comicsol-studio`; its Python import package
+is `comicsol_studio`, because module names cannot contain hyphens.
 
 Open `http://127.0.0.1:8766/studio/`. The launcher only binds a loopback address.
 
