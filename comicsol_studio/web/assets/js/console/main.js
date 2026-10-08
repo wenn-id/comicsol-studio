@@ -68,15 +68,57 @@ window.addEventListener("popstate", () => route());
 
 function setProject(project) {
   if (!project || project.id !== state.projectId) return;
+  const previous = state.project;
+  // A slow poll can answer after an action already returned a newer revision; keep the newer.
+  if (previous && previous.id === project.id && project.revision < previous.revision) return;
   state.project = project;
   state.error = null;
+  let finishedRun = false;
   for (const run of project.runs || []) {
-    const previous = state.seenRuns.get(run.id);
-    if (previous && previous !== run.status && (run.status === "succeeded" || run.status === "failed")) announceRun(run);
+    const before = state.seenRuns.get(run.id);
+    if (before && before !== run.status && (run.status === "succeeded" || run.status === "failed")) {
+      announceRun(run);
+      finishedRun = true;
+    }
     state.seenRuns.set(run.id, run.status);
   }
   schedulePoll();
+  const sameFiles = previous && previous.id === project.id && previous.revision === project.revision;
+  if (sameFiles && !finishedRun && userIsWorking()) {
+    // Only run progress changed while the creator is typing or waiting on a button:
+    // refresh the rail and leave the form alone.
+    renderRail();
+    return;
+  }
   render();
+}
+
+function userIsWorking() {
+  const active = document.activeElement;
+  const typing = active && view.contains(active) && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
+  return Boolean(typing || view.querySelector('[aria-busy="true"]'));
+}
+
+// Re-rendering replaces the DOM; put focus (and the caret) back where the creator was.
+function focusKey(element) {
+  if (!element || !view.contains(element)) return null;
+  const key = element.id ? `#${CSS.escape(element.id)}` : element.dataset.path ? `[data-path="${CSS.escape(element.dataset.path)}"]` : element.getAttribute("aria-label") ? `${element.tagName.toLowerCase()}[aria-label="${CSS.escape(element.getAttribute("aria-label"))}"]` : null;
+  if (!key) return null;
+  return { key, start: element.selectionStart, end: element.selectionEnd };
+}
+
+function restoreFocus(saved) {
+  if (!saved) return;
+  const element = view.querySelector(saved.key);
+  if (!element) return;
+  element.focus({ preventScroll: true });
+  if (typeof saved.start === "number" && element.setSelectionRange) {
+    try {
+      element.setSelectionRange(saved.start, saved.end);
+    } catch {
+      // Some input types do not support a selection.
+    }
+  }
 }
 
 function announceRun(run) {
@@ -238,7 +280,9 @@ function render() {
     return;
   }
   document.title = `${state.project.title} · Comic Sol Studio`;
+  const saved = focusKey(document.activeElement);
   VIEWS[route.stage](view, context());
+  restoreFocus(saved);
   if (!drawer.hidden) renderActivity(drawer, context(), toggleDrawer);
 }
 

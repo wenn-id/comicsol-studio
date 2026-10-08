@@ -187,7 +187,8 @@ async function loadPanel(ctx, state, holder, rerender) {
     }
     if (state.panel !== panelId) return;
   }
-  mount(holder, panelSheet(ctx, state, panel, context, key, rerender));
+  // Drafts follow the image's bytes, not the revision, so other work never wipes them.
+  mount(holder, panelSheet(ctx, state, panel, context, `${panelId}#${context.rawSha256}`, rerender));
 }
 
 function planEvidence(context) {
@@ -469,7 +470,7 @@ async function loadPage(ctx, state, holder, rerender) {
     }
     if (state.page !== number) return;
   }
-  mount(holder, pageSheet(ctx, state, page, context, key, rerender));
+  mount(holder, pageSheet(ctx, state, page, context, `page-${number}#${context.pageSha256}`, rerender));
 }
 
 function pageSheet(ctx, state, page, context, key, rerender) {

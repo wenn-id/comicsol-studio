@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
+import re
 import secrets
 import shutil
 import threading
@@ -40,6 +42,7 @@ SERVABLE_SUFFIXES = (".png", ".pdf", ".md")
 THUMB_WIDTHS = (240, 480, 960)
 CREATOR = "creator"
 UPLOAD_EXECUTOR = "comicsol-studio-upload"
+JOB_ID = re.compile(r"[0-9a-f]{64}")
 
 
 def _now() -> float:
@@ -308,10 +311,12 @@ class Studio:
         projects = []
         for row in rows:
             try:
-                root = self._root(row)
-                revision = self._sync(row["id"], root)
-                manifest = engine.manifest(root)
-                summary = engine.status_summary(root)
+                # Under the project lock, so a write in progress is never fingerprinted halfway.
+                with self._lock(row["id"]):
+                    root = self._root(row)
+                    revision = self._sync(row["id"], root)
+                    manifest = engine.manifest(root)
+                    summary = engine.status_summary(root)
             except (StudioError, OSError, ValueError):
                 projects.append(
                     {"id": row["id"], "title": row["title"], "status": "UNREADABLE", "revision": row["revision"]}
@@ -350,7 +355,7 @@ class Studio:
         generation = {
             **snapshot["generation"],
             "jobs": [
-                {**job, "candidate": self._candidate_path(project_id, job["jobId"]).is_file()}
+                {**job, **self._candidate_state(project_id, job["jobId"])}
                 for job in snapshot["generation"]["jobs"]
             ],
         }
@@ -373,7 +378,17 @@ class Studio:
             container = self.config.projects_root / project_id
             if container.exists():
                 destination = self.config.trash_root / f"{project_id}-{int(_now())}"
-                shutil.move(str(container), str(destination))
+                try:
+                    # A rename is atomic: the project moves whole or not at all. A copy
+                    # fallback could leave it half deleted when a file is open elsewhere.
+                    container.rename(destination)
+                except OSError as error:
+                    raise conflict(
+                        "project_busy",
+                        "Studio could not move this project to the trash.",
+                        "A file of the project is open somewhere. Close it and try again.",
+                    ) from error
+            self._snapshots.pop(project_id, None)
             with self.store.transaction() as db:
                 db.execute("DELETE FROM projects WHERE id = ?", (row["id"],))
 
@@ -543,9 +558,15 @@ class Studio:
                 image = image.resize((width, max(1, round(image.height * ratio))), Image.Resampling.LANCZOS)
                 buffer = io.BytesIO()
                 image.save(buffer, format="WEBP", quality=82, method=4)
-            temporary = target.with_suffix(".tmp")
+            temporary = target.with_name(f"{key}.{secrets.token_hex(6)}.tmp")
             temporary.write_bytes(buffer.getvalue())
-            temporary.replace(target)
+            try:
+                temporary.replace(target)
+            except OSError:
+                # A concurrent request already published the same thumbnail.
+                temporary.unlink(missing_ok=True)
+                if not target.is_file():
+                    raise
         return target
 
     # ------------------------------------------------------------------ #
@@ -608,7 +629,29 @@ class Studio:
         return self.project(project_id)
 
     def _candidate_path(self, project_id: str, job_id: str) -> Path:
+        # Job IDs are 64 hex digits; anything else never becomes part of a path.
+        if not JOB_ID.fullmatch(str(job_id)):
+            raise not_found("job")
         return self.config.staging_root / project_id / f"{job_id}.png"
+
+    def _candidate_state(self, project_id: str, job_id: str) -> dict[str, Any]:
+        candidate = self._candidate_path(project_id, job_id)
+        try:
+            stamp = candidate.stat().st_mtime_ns
+        except OSError:
+            return {"candidate": False, "candidateStamp": None}
+        return {"candidate": True, "candidateStamp": str(stamp)}
+
+    def _write_candidate(self, project_id: str, job_id: str, png: bytes, provenance: dict[str, Any]) -> None:
+        candidate = self._candidate_path(project_id, job_id)
+        candidate.parent.mkdir(parents=True, exist_ok=True)
+        candidate.with_suffix(".json").write_text(json.dumps(provenance), encoding="utf-8")
+        candidate.write_bytes(png)
+
+    def _drop_candidate(self, project_id: str, job_id: str) -> None:
+        candidate = self._candidate_path(project_id, job_id)
+        candidate.unlink(missing_ok=True)
+        candidate.with_suffix(".json").unlink(missing_ok=True)
 
     def _accept(
         self,
@@ -658,7 +701,7 @@ class Studio:
                 model=None,
                 used_references=False,
             )
-            self._candidate_path(project_id, job_id).unlink(missing_ok=True)
+            self._drop_candidate(project_id, job_id)
         what = "reference" if brief.subject_kind == "reference" else "panel"
         note = " (center-cropped to the panel's shape)" if conformed.cropped else ""
         self.store.add_event(
@@ -670,15 +713,11 @@ class Studio:
         candidate = self._candidate_path(project_id, job_id)
         if not candidate.is_file():
             raise not_found("candidate")
-        run = next(
-            (
-                item
-                for item in self.store.runs(project_id)
-                if item["kind"] == "render" and item["subject"] == job_id and item["status"] == "succeeded"
-            ),
-            None,
-        )
-        result = (run or {}).get("result") or {}
+        # The model that drew this exact candidate, written beside it when it was drawn.
+        try:
+            result = json.loads(candidate.with_suffix(".json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            result = {}
         with self._project(project_id, revision) as root:
             brief = engine.job_brief(root, job_id)
             self._accept(
@@ -691,19 +730,19 @@ class Studio:
                 model=result.get("model"),
                 used_references=bool(result.get("usedReferences")),
             )
-            candidate.unlink(missing_ok=True)
+            self._drop_candidate(project_id, job_id)
         self.store.add_event(project_id, "render.approved", f"Approved the reference for {brief.subject_id}.")
         return self.project(project_id)
 
     def discard_candidate(self, project_id: str, job_id: str) -> dict[str, Any]:
         self._row(project_id)
-        self._candidate_path(project_id, job_id).unlink(missing_ok=True)
+        self._drop_candidate(project_id, job_id)
         return self.project(project_id)
 
     def candidate_file(self, project_id: str, job_id: str) -> Path:
         self._row(project_id)
         path = self._candidate_path(project_id, job_id)
-        if len(job_id) != 64 or not path.is_file():
+        if not path.is_file():
             raise not_found("candidate")
         return path
 
@@ -713,7 +752,10 @@ class Studio:
         row = self._row(project_id)
         with self._lock(project_id):
             root = self._root(row)
-            brief = engine.job_brief(root, job_id)
+            try:
+                brief = engine.job_brief(root, job_id)
+            except (EngineInputError, ValueError) as error:
+                raise ProviderError(f"Job {job_id[:8]} is no longer part of the render jobs.") from error
             if brief.status != "ready":
                 raise ProviderError(f"This job is {brief.status}; nothing to render.")
             references = tuple(engine.read_bytes(root, path) for path in brief.references)
@@ -734,9 +776,7 @@ class Studio:
             "subjectId": brief.subject_id,
         }
         if brief.subject_kind == "reference":
-            candidate = self._candidate_path(project_id, job_id)
-            candidate.parent.mkdir(parents=True, exist_ok=True)
-            candidate.write_bytes(conformed.png)
+            self._write_candidate(project_id, job_id, conformed.png, result)
             self.store.add_event(
                 project_id,
                 "render.candidate",
@@ -793,7 +833,8 @@ class Studio:
                 try:
                     self._render_one(project_id, job_id, provider_id)
                     done += 1
-                except (ProviderError, StudioError) as error:
+                except (ProviderError, StudioError, ValueError) as error:
+                    # One vanished or refused job never stops the rest of the batch.
                     failed.append(getattr(error, "message", str(error)))
             if failed and not done:
                 raise ProviderError(failed[0])

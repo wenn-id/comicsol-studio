@@ -265,6 +265,27 @@ class ProductionFlowTests(unittest.TestCase):
         reread = self.client.get(f"/api/projects/{project['id']}").json()
         self.assertGreater(reread["revision"], project["revision"])
 
+    def test_job_ids_never_become_paths(self) -> None:
+        project = self.client.post("/api/projects", json={"starter": "minimal-one-page"}).json()
+        for job_id in ("..%5C..%5Cstudio", "x" * 64, "../" + "a" * 61):
+            with self.subTest(job_id=job_id):
+                response = self.client.delete(f"/api/projects/{project['id']}/render/jobs/{job_id}/candidate")
+                self.assertIn(response.status_code, {404, 405})
+
+    def test_malformed_panel_review_is_refused_not_crashed(self) -> None:
+        project = self.client.post("/api/projects", json={"starter": "minimal-one-page"}).json()
+        project = self.prepare(project)
+        project = self.upload_ready_jobs(project)
+        project = self.prepare(project)
+        project = self.upload_ready_jobs(project)
+        panel_id = project["panels"][0]["id"]
+        for body in ({"checks": [], "assessments": []}, {"checks": [{"id": "anatomy"}], "assessments": [1]}):
+            with self.subTest(body=body):
+                response = self.client.post(
+                    f"/api/projects/{project['id']}/panels/{panel_id}/review", revision=project["revision"], json=body
+                )
+                self.assertEqual(422, response.status_code, response.text)
+
     def test_files_stay_inside_the_project(self) -> None:
         project = self.client.post("/api/projects", json={"starter": "minimal-one-page"}).json()
         for path in ("project.json", "plan/storyboard.json", "../studio.sqlite3", "pages/../project.json"):

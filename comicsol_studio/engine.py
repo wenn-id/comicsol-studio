@@ -778,6 +778,11 @@ def publish_panel_review(
     panel = _panel(root, panel_id)
     if not exists(root, f"panels/raw/{panel_id}.png"):
         raise EngineInputError("This panel has no accepted image to review yet.")
+    expected_ids = list(core.PANEL_CHECK_IDS)
+    if [check.get("id") if isinstance(check, Mapping) else None for check in checks] != expected_ids:
+        raise EngineInputError("A panel review lists these checks in order: " + ", ".join(expected_ids) + ".")
+    if not all(isinstance(item, Mapping) for item in assessments):
+        raise EngineInputError("Character assessments must be objects.")
     checks = [
         {
             "id": check.get("id"),
@@ -924,8 +929,10 @@ def page_review_context(root: Path, number: int) -> dict[str, Any]:
     relative = f"qa/pages/page-{number:03d}.json"
     record = read_json(root, relative) if exists(root, relative) else None
     stale = bool(module("page_quality").validate_page_quality(root, number)) if record else None
+    page_png = f"pages/page-{number:03d}.png"
     return {
         "number": number,
+        "pageSha256": hashlib.sha256(read_bytes(root, page_png)).hexdigest() if exists(root, page_png) else None,
         "page": page,
         "checks": list(module("page_quality").SUBJECTIVE_PAGE_CHECK_IDS),
         "balloons": balloons,

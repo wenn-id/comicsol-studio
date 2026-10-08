@@ -258,6 +258,11 @@ class BackgroundRunTests(unittest.TestCase):
             self.assertEqual(200, response.status_code, response.text)
             project = response.json()
         self.assertTrue(all(reference["image"] for reference in project["references"]))
+        # The engine's receipt names the model that drew each approved reference.
+        engine_root = next((self.client.config.projects_root / project["id"]).iterdir())
+        receipts = [json.loads(path.read_text(encoding="utf-8")) for path in (engine_root / "generation" / "receipts").glob("*.json")]
+        self.assertTrue(receipts)
+        self.assertTrue(all("fake" in json.dumps(receipt) for receipt in receipts), receipts[0])
 
         project = self.client.post(f"/api/projects/{project['id']}/render/prepare", revision=project["revision"]).json()
         run = self.client.post(

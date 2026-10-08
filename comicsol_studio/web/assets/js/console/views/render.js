@@ -138,7 +138,7 @@ function jobSection(ctx, title, text, jobs, busyJobs) {
 
 function jobImage(ctx, job) {
   const project = ctx.project;
-  if (job.candidate) return api.candidateUrl(project.id, job.jobId, project.revision);
+  if (job.candidate) return api.candidateUrl(project.id, job.jobId, job.candidateStamp);
   if (job.kind === "reference") return project.references.find((ref) => ref.characterId === job.subjectId)?.image || null;
   return project.panels.find((panel) => panel.id === job.subjectId)?.image || null;
 }
