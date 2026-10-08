@@ -1,4 +1,4 @@
-"""Loopback launcher for comicsol-studio."""
+"""Loopback launcher for Comic Sol Studio."""
 
 from __future__ import annotations
 
@@ -8,46 +8,30 @@ import sys
 from collections.abc import Sequence
 
 import uvicorn
-from comic_sol_web.config import DATA_ROOT_VAR, WebConfig, WebConfigError
 
-from comicsol_studio.app import (
-    UI_PATH,
-    MissingBackendModuleError,
-    create_studio_app,
-)
-
-DEFAULT_PORT = 8766
+from comicsol_studio.app import CONSOLE_PATH, create_app
+from comicsol_studio.config import DATA_ROOT_VAR, DEFAULT_PORT, ConfigError, StudioConfig
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="comicsol-studio",
-        description="Run the single-user comicsol-studio on a loopback address.",
+        description="Run Comic Sol Studio for one creator on a loopback address.",
     )
     parser.add_argument(
         "--data-root",
         help=f"absolute directory for Studio data (defaults to ${DATA_ROOT_VAR})",
     )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="loopback port")
-    parser.add_argument(
-        "--agent-images",
-        action="store_true",
-        help="offer the agent-native image route: a local agent session supplies rasters",
-    )
     args = parser.parse_args(argv)
-
-    environ = dict(os.environ)
-    if args.data_root:
-        environ[DATA_ROOT_VAR] = args.data_root
     try:
-        config = WebConfig.local_from_env(environ)
-        capabilities = frozenset({"text_to_image"}) if args.agent_images else frozenset()
-        app = create_studio_app(config, active_agent_image_capabilities=capabilities)
-    except (WebConfigError, MissingBackendModuleError) as error:
+        config = StudioConfig.from_env(os.environ, data_root=args.data_root, port=args.port)
+        app = create_app(config)
+    except ConfigError as error:
         parser.error(str(error))
-
-    print(f"comicsol-studio: http://{config.host}:{args.port}{UI_PATH}/", file=sys.stderr)
-    uvicorn.run(app, host=config.host, port=args.port, log_level="info")
+    print(f"Comic Sol Studio: http://{config.host}:{config.port}/", file=sys.stderr)
+    print(f"Console:          http://{config.host}:{config.port}{CONSOLE_PATH}/", file=sys.stderr)
+    uvicorn.run(app, host=config.host, port=config.port, log_level="info")
     return 0
 
 
