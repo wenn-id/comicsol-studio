@@ -1,30 +1,4 @@
-/* Creator console. Calm 2D surfaces so the comic art is the brightest thing on screen;
-   amber marks the primary action and the current stage only. */
-
-/* Day theme: printed-paper surfaces with a text-safe amber. */
-:root[data-theme="day"] {
-  color-scheme: light;
-  --obsidian: #f3eee3;
-  --ink-1: #ebe5d8;
-  --ink-2: #fbf8f1;
-  --ink-3: #e6dfd1;
-  --ink-4: #d4ccbb;
-  --line: rgba(32, 26, 16, 0.12);
-  --line-strong: rgba(32, 26, 16, 0.24);
-  --control-edge: #837a6a;
-  --ivory: #1a1711;
-  --ivory-2: #4a4438;
-  --ivory-3: #5d5648;
-  --amber: #d9a441;
-  --amber-hi: #c8922e;
-  --amber-text: #7a4f06;
-  --amber-wash: rgba(217, 164, 65, 0.18);
-  --sage: #24663b;
-  --sage-wash: rgba(47, 122, 74, 0.12);
-  --ember: #9a3519;
-  --ember-wash: rgba(178, 69, 42, 0.1);
-  --focus: 0 0 0 2px var(--ink-2), 0 0 0 4px var(--amber-text);
-}
+/* Flat editor surfaces; print red marks the primary action and current stage. */
 
 .console {
   min-height: 100vh;

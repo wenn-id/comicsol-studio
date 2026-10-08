@@ -316,7 +316,7 @@ function route() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]').content = theme === "day" ? "#f3eee3" : "#08090b";
+  document.querySelector('meta[name="theme-color"]').content = theme === "day" ? "#f4f1ea" : "#171716";
 }
 
 function toggleTheme() {
@@ -427,9 +427,9 @@ document.addEventListener("keydown", (event) => {
 
 (async function boot() {
   try {
-    applyTheme(localStorage.getItem(THEME_KEY) === "day" ? "day" : "night");
+    applyTheme(localStorage.getItem(THEME_KEY) === "night" ? "night" : "day");
   } catch {
-    applyTheme("night");
+    applyTheme("day");
   }
   try {
     state.session = await loadSession();

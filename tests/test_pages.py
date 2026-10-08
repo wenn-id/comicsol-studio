@@ -70,6 +70,22 @@ class PagesBuildTests(unittest.TestCase):
         completed = subprocess.run([node, "--check", str(PAGES / "demo" / "mock.js")], capture_output=True, text=True)
         self.assertEqual(0, completed.returncode, completed.stderr)
 
+    def test_original_sample_has_all_its_artwork(self) -> None:
+        sample = PAGES / "sample"
+        request = json.loads((sample / "source/request.json").read_text(encoding="utf-8"))
+        plan = json.loads((sample / "plan/storyboard.json").read_text(encoding="utf-8"))
+        cast = json.loads((sample / "plan/character-bible.json").read_text(encoding="utf-8"))
+        self.assertEqual(request["title"], "Rooftop Stories")
+        self.assertEqual(request["page_count"], len(plan["pages"]))
+        subjects = {panel["id"] for page in plan["pages"] for panel in page["panels"]}
+        subjects.update(character["id"] for character in cast["characters"])
+        self.assertEqual(subjects, request["art"].keys())
+        for subject, relative in request["art"].items():
+            with self.subTest(subject=subject):
+                art = (sample / "source" / relative).resolve()
+                self.assertTrue(art.is_relative_to(WEB_DIR / "assets/img"))
+                self.assertTrue(art.is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

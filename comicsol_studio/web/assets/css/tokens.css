@@ -1,5 +1,4 @@
-/* Comic Sol Studio design tokens, shared by the landing page and the console.
-   Obsidian and amber are the owner's palette; ivory is the paper the comics print on. */
+/* Paper, charcoal, and print red. Legacy console token names retain their roles. */
 
 @font-face {
   font-family: "Manrope";
@@ -19,44 +18,69 @@
 :root {
   color-scheme: dark;
 
-  --obsidian: #08090b;
-  --ink-1: #0e0f12;
-  --ink-2: #14161a;
-  --ink-3: #1c1f25;
-  --ink-4: #262a31;
+  --obsidian: #171716;
+  --ink-1: #1c1c1a;
+  --ink-2: #22221f;
+  --ink-3: #292824;
+  --ink-4: #36332e;
   --line: rgba(238, 231, 216, 0.09);
   --line-strong: rgba(238, 231, 216, 0.18);
-  --control-edge: #7e776b;
+  --control-edge: #8c8379;
 
-  --ivory: #eee7d8;
-  --ivory-2: #bdb6a8;
-  --ivory-3: #8f897e;
+  --ivory: #f4f1ea;
+  --ivory-2: #c9c3b8;
+  --ivory-3: #aaa297;
 
-  --amber: #d9a441;
-  --amber-hi: #e9bb5e;
-  --amber-lo: #a57a2a;
-  --amber-wash: rgba(217, 164, 65, 0.12);
-  --amber-text: #e2b15a;
-  --on-amber: #1a1307;
+  --amber: #b43928;
+  --amber-hi: #963021;
+  --amber-lo: #873021;
+  --amber-wash: rgba(180, 57, 40, 0.13);
+  --amber-text: #f1a18f;
+  --on-amber: #ffffff;
+  --accent: var(--amber);
+  --accent-hi: var(--amber-hi);
+  --accent-text: var(--amber-text);
+  --on-accent: var(--on-amber);
 
   --sage: #93c3a0;
   --sage-wash: rgba(147, 195, 160, 0.12);
   --ember: #e98a6f;
   --ember-wash: rgba(233, 138, 111, 0.12);
 
-  --paper: #f3eee3;
-  --paper-ink: #16140f;
+  --paper: #f4f1ea;
+  --paper-ink: #25282b;
 
   --sans: "Manrope", "Segoe UI", system-ui, sans-serif;
   --comic: "Comic Neue", "Comic Sans MS", cursive;
 
-  --r1: 4px;
-  --r2: 6px;
-  --r3: 10px;
+  --r1: 2px;
+  --r2: 3px;
+  --r3: 6px;
 
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --focus: 0 0 0 2px var(--obsidian), 0 0 0 4px var(--amber);
+}
+
+:root[data-theme="day"] {
+  color-scheme: light;
+  --obsidian: #f4f1ea;
+  --ink-1: #ece7de;
+  --ink-2: #fdfbf6;
+  --ink-3: #e5dfd4;
+  --ink-4: #d5cec2;
+  --line: rgba(37, 40, 43, 0.14);
+  --line-strong: rgba(37, 40, 43, 0.35);
+  --control-edge: #867a6a;
+  --ivory: #25282b;
+  --ivory-2: #454747;
+  --ivory-3: #64615b;
+  --amber-text: #9e2c1d;
+  --sage: #2d6641;
+  --sage-wash: rgba(45, 102, 65, 0.12);
+  --ember: #973327;
+  --ember-wash: rgba(151, 51, 39, 0.10);
+  --focus: 0 0 0 2px var(--ink-2), 0 0 0 4px var(--amber-text);
 }
 
 *,

@@ -1,0 +1,7 @@
+{
+  "reading-order": "The two stacked panels read top to bottom in the storyboard order on page {n}.",
+  "lettering": "The short captions sit in the planned upper-left space on page {n} without obscuring Mena's face or the pigeon.",
+  "balloon-tails": "Page {n} uses captions only; no speech-balloon tails require a speaker.",
+  "layout": "Page {n} uses the engine's two-horizontal layout, with 64 px margins, a 32 px gutter and no clipped frame.",
+  "continuity": "Mena's curly black hair, red hoodie, black trousers and rooftop setting remain consistent across page {n}."
+}

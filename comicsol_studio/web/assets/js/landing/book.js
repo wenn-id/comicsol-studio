@@ -1,10 +1,9 @@
 // The hero's softcover comic book. Sheets are bendable planes deformed on the CPU each
 // frame (a few hundred vertices), so the cover bows as it opens and pages curl as they
-// turn. Rendering happens only when the scroll or pointer actually changed something.
+// turn. Rendering happens only while a view, pointer, or texture changes.
 
 import * as THREE from "../../vendor/three.module.min.js";
 import {
-  PAGE_COUNT,
   PAGE_RATIO,
   drawBackCover,
   drawCover,
@@ -22,24 +21,19 @@ const GAP = 0.0016;
 const SEGMENTS_U = 36;
 const SEGMENTS_V = 10;
 
-// Camera keyframes: [progress, position, target], composed for landscape screens.
+// Frame the whole book inside its viewer, including the lifted cover and open spread.
 const SHOTS = [
-  [0.0, [1.6, 2.95, 3.4], [-0.42, 0.0, 0.2]],
-  [0.1, [1.35, 3.3, 3.2], [-0.4, 0.0, 0.12]],
-  [0.36, [-0.2, 4.9, 2.95], [-0.62, 0.0, 0.12]],
-  [0.82, [-0.05, 4.4, 2.55], [-0.5, 0.0, 0.08]],
-  [0.9, [0.05, 4.2, 2.45], [-0.42, 0.0, 0.06]],
-  [1.0, [1.25, 2.05, 1.05], [0.42, 0.0, -0.08]],
+  [0, [1.2, 2.7, 2.8], [.65, .08, .24]],
+  [.19, [1.4, 3.3, 3.5], [.1, .35, .08]],
+  [.37, [.05, 3.5, 3.5], [0, .08, 0]],
+  [.84, [.1, 3.5, 3.5], [0, .08, 0]],
 ];
 
-// Portrait screens: the book sits in the upper half, clear of the copy below it, and
-// the open spread is centered so both pages stay on screen.
 const PORTRAIT_SHOTS = [
-  [0.0, [1.15, 6.0, 6.1], [0.62, 0.0, 1.95]],
-  [0.1, [0.95, 6.1, 5.9], [0.5, 0.0, 1.75]],
-  [0.36, [0.0, 7.6, 5.3], [0.0, 0.0, 1.35]],
-  [0.9, [0.0, 7.3, 5.0], [0.0, 0.0, 1.3]],
-  [1.0, [0.95, 2.7, 2.2], [0.68, 0.0, 0.45]],
+  [0, [1.1, 3.5, 3.3], [.65, .08, .24]],
+  [.19, [1.1, 4.2, 4.0], [.1, .35, .08]],
+  [.37, [.05, 4.8, 4.5], [0, 0, 0]],
+  [.84, [.1, 4.8, 4.5], [0, 0, 0]],
 ];
 
 function shot(p, portrait) {
@@ -70,13 +64,13 @@ class Sheet {
     this.rest = Float32Array.from(this.geometry.attributes.position.array);
     this.stiffness = stiffness;
     this.twist = twist;
-    // A laminated softcover is glossy outside and matte inside; paper is matte both ways.
+    // The printed softcover reflects less than laminated stock; pages stay matte.
     this.frontMaterial =
       material === "cover"
         ? new THREE.MeshPhysicalMaterial({
-            roughness: 0.34,
-            clearcoat: 0.55,
-            clearcoatRoughness: 0.32,
+            roughness: 0.76,
+            clearcoat: 0.08,
+            clearcoatRoughness: 0.7,
             map: front,
             side: THREE.FrontSide,
           })
@@ -137,7 +131,7 @@ function texture(renderer, source, { flip = false } = {}) {
 
 function studioEnvironment(renderer) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050506);
+  scene.background = new THREE.Color(0xf4f1ea);
   const softbox = (color, intensity, width, height, position, rotation) => {
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(width, height),
@@ -147,9 +141,9 @@ function studioEnvironment(renderer) {
     mesh.rotation.set(...rotation);
     scene.add(mesh);
   };
-  softbox(0xffd59a, 5, 6, 3, [2, 6, 2], [Math.PI / 2, 0, 0.3]);
+  softbox(0xffffff, 2.5, 6, 3, [2, 6, 2], [Math.PI / 2, 0, 0.3]);
   softbox(0x9fb0d0, 1.4, 1.2, 6, [-6, 2, -2], [0, Math.PI / 2, 0]);
-  softbox(0xffe9c8, 2.2, 8, 0.4, [0, 3, -6], [0, 0, 0]);
+  softbox(0xffffff, 1.6, 8, 0.4, [0, 3, -6], [0, 0, 0]);
   const pmrem = new THREE.PMREMGenerator(renderer);
   const target = pmrem.fromScene(scene, 0.04);
   pmrem.dispose();
@@ -160,25 +154,23 @@ export async function createBook(canvas, { onReady } = {}) {
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
-    alpha: false,
+    alpha: true,
     powerPreference: "high-performance",
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = .82;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x08090b);
-  scene.fog = new THREE.Fog(0x08090b, 5.5, 12);
   scene.environment = studioEnvironment(renderer);
-  scene.environmentIntensity = 0.55;
+  scene.environmentIntensity = .35;
 
   const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 40);
 
-  const key = new THREE.SpotLight(0xffdcae, 85, 0, 0.52, 0.85, 2);
+  const key = new THREE.SpotLight(0xffffff, 30, 0, 0.65, 0.85, 2);
   key.position.set(2.4, 5.6, 2.2);
   key.target.position.set(0.2, 0, 0);
   key.castShadow = true;
@@ -187,14 +179,14 @@ export async function createBook(canvas, { onReady } = {}) {
   key.shadow.normalBias = 0.025;
   key.shadow.radius = 4;
   scene.add(key, key.target);
-  scene.add(new THREE.HemisphereLight(0x515867, 0x0a0a0c, 0.45));
-  const rim = new THREE.DirectionalLight(0xbac6e6, 0.7);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8b8070, .75));
+  const rim = new THREE.DirectionalLight(0xffffff, .45);
   rim.position.set(-3.5, 2.4, -4);
   scene.add(rim);
 
   const table = new THREE.Mesh(
     new THREE.PlaneGeometry(30, 30),
-    new THREE.MeshStandardMaterial({ color: 0x0d0e11, roughness: 0.78, metalness: 0.0 }),
+    new THREE.ShadowMaterial({ color: 0x50483d, opacity: .18 }),
   );
   table.rotation.x = -Math.PI / 2;
   table.receiveShadow = true;
@@ -255,8 +247,8 @@ export async function createBook(canvas, { onReady } = {}) {
       leaves[index].backMaterial.map = texture(renderer, drawPage(index * 2 + 1, { mirrored: true }));
       leaves[index].frontMaterial.needsUpdate = leaves[index].backMaterial.needsUpdate = true;
     } else {
-      rightBlock.material[2].map = texture(renderer, drawPage(PAGE_COUNT - 1));
-      leftBlock.material[2].map = texture(renderer, drawPage(1));
+      rightBlock.material[2].map = texture(renderer, drawInsideCover());
+      leftBlock.material[2].map = texture(renderer, drawInsideCover());
       rightBlock.material[2].needsUpdate = leftBlock.material[2].needsUpdate = true;
     }
     pending -= 1;
@@ -331,7 +323,7 @@ export async function createBook(canvas, { onReady } = {}) {
     state.height = height;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    camera.fov = width / height < 0.9 ? 40 : 36;
+    camera.fov = width / height < 0.9 ? 32 : 34;
     camera.updateProjectionMatrix();
     state.dirty = true;
   }

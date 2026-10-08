@@ -2,11 +2,11 @@
 
 Drives the actual Studio application and the pinned Comic Sol engine through the whole
 creator workflow (create, plan, references, panels, reviews, pages, finish) using the
-engine's Sunlight Courier sample, and saves every response the console reads at every
+original Rooftop Stories sample, and saves every response the console reads at every
 step. The preview's in-browser demo replays this recording; it never invents engine
 output. No provider is configured, so nothing leaves the machine.
 
-    python pages/record.py --sample <comicsol>/samples/sunlight-courier --out <dir>
+    python pages/record.py --sample pages/sample --out <dir>
 """
 
 from __future__ import annotations
@@ -36,13 +36,13 @@ FILE_URL = re.compile(r"/api/projects/[a-f0-9]{24}/(?:files|thumb)/[^\"\s]+")
 
 # Character-trait assessments: the engine refuses generic evidence, so each names what
 # was compared against the reference sheet.
-TRAIT_EVIDENCE = "{name}'s {trait} matches the reference sheet: same {trait} as the retained Mira reference."
+TRAIT_EVIDENCE = "{name}'s {trait} is consistent with the retained reference and plan: {expected}."
 PAGE_EVIDENCE = {
     "reading-order": "Panels read left to right, top to bottom in storyboard order on page {n}.",
-    "lettering": "Balloons sit in protected space on page {n} and never cover a face or the vial.",
+    "lettering": "Lettering sits in protected space on page {n} and does not cover important artwork.",
     "balloon-tails": "Every balloon tail on page {n} points at the speaking character.",
     "layout": "Page {n} uses the planned layout with even gutters and no clipped panel.",
-    "continuity": "Mira's amber scarf, black bob, and brass-clasp case stay consistent across page {n}.",
+    "continuity": "Character appearance and the planned setting stay consistent across page {n}.",
 }
 
 
@@ -61,6 +61,9 @@ class Recorder:
     def __init__(self, sample: Path, out: Path) -> None:
         self.sample = sample
         self.out = out
+        self.art: dict[str, str] = {}
+        page_evidence = sample / "qa" / "pages.json"
+        self.page_evidence = json.loads(page_evidence.read_text(encoding="utf-8")) if page_evidence.exists() else PAGE_EVIDENCE
         self.data_root = Path(tempfile.mkdtemp(prefix="comicsol-pages-record-"))
         self.app = create_app(StudioConfig(data_root=self.data_root), providers=Providers())
         self.http = TestClient(self.app, base_url=BASE_URL)
@@ -159,6 +162,7 @@ class Recorder:
 
     def run(self) -> None:
         request = json.loads((self.sample / "source" / "request.json").read_text(encoding="utf-8"))
+        self.art = request.get("art", {})
         prompt = (self.sample / "source" / "input.txt").read_text(encoding="utf-8").strip()
         self.steps.append({"label": "Library", "stage": "library", "write": None, "reads": self.reads()})
 
@@ -172,7 +176,7 @@ class Recorder:
                 "prompt": prompt,
                 "language": request.get("language", "en"),
                 "mode": request.get("mode", "short_prompt"),
-                "pageCount": 2,
+                "pageCount": request.get("page_count", 2),
             },
         )
         plan = {
@@ -204,7 +208,9 @@ class Recorder:
         for job in jobs:
             if job["status"] != "ready":
                 continue
-            if job["kind"] == "reference":
+            if job["subjectId"] in self.art:
+                art = self.sample / "source" / self.art[job["subjectId"]]
+            elif job["kind"] == "reference":
                 art = self.sample / "references" / "characters" / f"{job['subjectId']}.png"
             else:
                 art = self.sample / "panels" / job["subjectId"] / "clean.png"
@@ -212,7 +218,7 @@ class Recorder:
                 f"Upload art for {job['subjectId']}",
                 "POST",
                 f"{project_path}/render/jobs/{job['jobId']}/upload",
-                files={"image": (art.name, art.read_bytes(), "image/png")},
+                files={"image": (art.name, art.read_bytes(), mimetypes.guess_type(art.name)[0] or "image/png")},
             )
 
     def review_panel(self, panel_id: str) -> None:
@@ -235,7 +241,10 @@ class Recorder:
                 "trait": trait["trait"],
                 "result": "pass",
                 "severity": "error",
-                "evidence": TRAIT_EVIDENCE.format(name=character.get("name") or character["characterId"], trait=trait["trait"]),
+                "evidence": TRAIT_EVIDENCE.format(
+                    name=character.get("name") or character["characterId"], trait=trait["trait"],
+                    expected=json.dumps(trait["expected"], ensure_ascii=False),
+                ),
             }
             for character in context["characters"]
             for trait in character["traits"]
@@ -255,7 +264,7 @@ class Recorder:
                 "id": check_id,
                 "result": "pass",
                 "severity": "error",
-                "evidence": PAGE_EVIDENCE.get(check_id, "{id} on page {n} matches the storyboard.").format(n=number, id=check_id),
+                "evidence": self.page_evidence.get(check_id, "{id} on page {n} matches the storyboard.").format(n=number, id=check_id),
                 "regions": [],
             }
             for check_id in context["checks"]

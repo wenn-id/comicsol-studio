@@ -31,8 +31,8 @@ def contrast(a: str, b: str) -> float:
 class ContrastTests(unittest.TestCase):
     def themes(self) -> dict[str, dict[str, str]]:
         night = tokens((CSS / "tokens.css").read_text(encoding="utf-8").split(":root {", 1)[1].split("}", 1)[0])
-        console = (CSS / "console.css").read_text(encoding="utf-8")
-        day_block = console.split(':root[data-theme="day"] {', 1)[1].split("}", 1)[0]
+        shared = (CSS / "tokens.css").read_text(encoding="utf-8")
+        day_block = shared.split(':root[data-theme="day"] {', 1)[1].split("}", 1)[0]
         return {"night": night, "day": {**night, **tokens(day_block)}}
 
     def test_text_tokens_meet_wcag_aa_on_every_surface(self) -> None:
@@ -94,6 +94,22 @@ class SourceRuleTests(unittest.TestCase):
 
 
 class ModuleTests(unittest.TestCase):
+    def test_book_views_open_and_turn_the_two_page_comic(self) -> None:
+        run_node(
+            self,
+            """
+            import assert from 'node:assert/strict';
+            import { BOOK_VIEWS, LEAVES, coverAngle, leafAngle } from './assets/js/landing/timeline.js';
+            import { PAGE_COUNT } from './assets/js/landing/textures.js';
+            assert.equal(PAGE_COUNT, 2);
+            assert.equal(LEAVES * 2, PAGE_COUNT);
+            assert.equal(coverAngle(BOOK_VIEWS[0].progress), 0);
+            assert.equal(coverAngle(BOOK_VIEWS[2].progress), Math.PI);
+            assert.equal(leafAngle(BOOK_VIEWS[2].progress, 0), 0);
+            assert.equal(leafAngle(BOOK_VIEWS[3].progress, 0), Math.PI);
+            """,
+        )
+
     def test_icon_only_button_has_an_accessible_name(self) -> None:
         run_node(
             self,
