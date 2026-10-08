@@ -1,0 +1,12 @@
+# Interface files are byte-stable across Windows and POSIX checkouts.
+*.md text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
+*.toml text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+LICENSE text eol=lf
+*.ttf binary

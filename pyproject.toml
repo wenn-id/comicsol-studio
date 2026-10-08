@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comic-sol-studio-next"
+dynamic = ["version"]
+description = "A creator-first Comic Sol Studio interface served on top of the comic-sol-web API"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Alwan Juliawan" }]
+dependencies = [
+    "comic-sol-web==0.1.0",
+]
+
+[project.scripts]
+comic-sol-studio-next = "comic_sol_studio_next.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "comic_sol_studio_next.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["comic_sol_studio_next*"]
+
+[tool.setuptools.package-data]
+comic_sol_studio_next = [
+    "ui/index.html",
+    "ui/css/*.css",
+    "ui/js/*.js",
+    "ui/js/views/*.js",
+    "ui/fonts/ComicNeue-Bold.ttf",
+    "ui/fonts/OFL-ComicNeue.txt",
+]
