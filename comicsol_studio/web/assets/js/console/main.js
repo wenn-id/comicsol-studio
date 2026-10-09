@@ -218,7 +218,7 @@ function renderRail() {
       h(
         "nav",
         { class: "rail__nav", "aria-label": "Library" },
-        h("a", { href: `${BASE}/`, "data-link": true, class: "rail__link", "aria-current": state.route.name === "library" ? "page" : null }, icon("library"), h("span", {}, "Library")),
+        h("a", { href: `${BASE}/`, "data-link": true, class: "rail__link", "aria-label": "Library", "aria-current": state.route.name === "library" ? "page" : null }, icon("library"), h("span", {}, "Library")),
       ),
       project
         ? h(
@@ -250,9 +250,9 @@ function renderRail() {
     h(
       "div",
       { class: "rail__bottom" },
-      project ? h("button", { type: "button", class: "rail__link", onclick: toggleDrawer, "aria-expanded": String(!drawer.hidden) }, icon("activity"), h("span", {}, "Activity")) : null,
+      project ? h("button", { type: "button", class: "rail__link", onclick: toggleDrawer, "aria-label": "Activity", "aria-expanded": String(!drawer.hidden) }, icon("activity"), h("span", {}, "Activity")) : null,
       h("button", { type: "button", class: "rail__link", onclick: toggleTheme, "aria-label": `Switch to ${theme === "day" ? "night" : "day"} theme` }, icon(theme === "day" ? "moon" : "sun"), h("span", {}, theme === "day" ? "Night" : "Day")),
-      h("button", { type: "button", class: "rail__link", onclick: openPalette }, icon("search"), h("span", {}, "Commands"), h("kbd", {}, "Ctrl K")),
+      h("button", { type: "button", class: "rail__link", onclick: openPalette, "aria-label": "Commands" }, icon("search"), h("span", {}, "Commands"), h("kbd", {}, "Ctrl K")),
       state.session ? h("p", { class: "rail__engine" }, `Comic Sol engine ${state.session.engine.version}`) : null,
     ),
   );
@@ -316,7 +316,7 @@ function route() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]').content = theme === "day" ? "#f3eee3" : "#08090b";
+  document.querySelector('meta[name="theme-color"]').content = theme === "day" ? "#f4f1ea" : "#171716";
 }
 
 function toggleTheme() {
@@ -427,9 +427,9 @@ document.addEventListener("keydown", (event) => {
 
 (async function boot() {
   try {
-    applyTheme(localStorage.getItem(THEME_KEY) === "day" ? "day" : "night");
+    applyTheme(localStorage.getItem(THEME_KEY) === "night" ? "night" : "day");
   } catch {
-    applyTheme("night");
+    applyTheme("day");
   }
   try {
     state.session = await loadSession();

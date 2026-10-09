@@ -77,9 +77,11 @@ GitHub Pages cannot run Studio, so the console's `/api/*` calls are answered in 
 browser by a DEMO layer (`pages/demo/mock.js`) that replays a recorded session. The
 recording comes from `pages/record.py`, which drives the actual Studio app and the pinned
 engine through the whole creator flow (create, plan, references, panels, panel and page
-reviews, compose, finish) with the engine's Sunlight Courier sample. Nothing in the replay
-is invented: every snapshot, review context, page image, and the PDF were produced by the
-engine. Panel and page images are stored as WebP to keep the preview light.
+reviews, compose, finish) with the original [Rooftop Stories sample](pages/sample/README.md).
+Its brief, plan, character reference and AI-created panels are bundled in this repository.
+The application and engine produce every snapshot, review context, composed page and PDF.
+The sample uses preset development reviews based on visual inspection; these are not
+judgements made by a visitor or a live vision model. Images are stored as WebP.
 
 In the preview, actions that match the next recorded step (prepare, upload, review,
 compose, finish, rename, trash) advance the replay. Anything else, such as an archive
@@ -95,7 +97,7 @@ artifact. Every push to `main` also deploys it to GitHub Pages at
 To build it locally (the recording takes a few minutes):
 
 ```bash
-python pages/record.py --sample /path/to/comicsol/samples/sunlight-courier --out recording
+python pages/record.py --sample pages/sample --out recording
 python pages/build.py --recording recording --out _site/comicsol-studio --base /comicsol-studio/
 python -m http.server 8790 --directory _site
 ```
@@ -139,33 +141,40 @@ browser                         comicsol_studio (one process)              Comic
 
 ## Design notes
 
-Design read: a premium dark cinematic landing and a calm 2D creator console for comic
-creators, in the owner's direction (obsidian `#08090B`, amber `#D9A441`, 80% luxury and
-20% tech). Dials: landing ENERGY 3 / RHYTHM 3 / MOTION 3, console ENERGY 2 / RHYTHM 2 /
-MOTION 1.
+Design read: an independent comic publisher's editorial landing and a flat creator
+workspace. The owner selected the white-and-red concept, with a moving Three.js book and
+an original comic. Dials: landing ENERGY 3 / RHYTHM 3 / MOTION 2; console ENERGY 2 /
+RHYTHM 2 / MOTION 1.
 
-- Obsidian keeps the artwork the brightest thing on screen. Amber marks the primary action
-  and the current stage only. Ivory is the paper the comics print on.
-- Instrument Serif carries the luxury voice in display type; Manrope's squared geometry and
-  tabular figures carry the tool. Comic Neue appears only where lettering is previewed,
-  because it is the engine's lettering face.
-- The hero is a softcover comic drawn in the browser: a laminated cover that bows as it
-  opens, pages that curl as they turn, interior pages laid out on the engine's five page
-  layouts. It renders only when the scroll or pointer changes, eases by time rather than by
-  frame, shows a still of the open book with reduced motion, and a poster without WebGL.
+- Paper `#F4F1EA`, charcoal `#25282B` and print red `#B43928` make the artwork the focus.
+  Red marks primary actions and the current stage. Day is the default console theme;
+  a saved night-theme preference remains respected.
+- Manrope carries the interface with a compact, bold editorial hierarchy. The original
+  illustrated cover uses its own condensed title; Comic Neue is the engine's lettering face.
+- The hero is an actual Three.js softcover with deformable sheets, a matte cover and paper
+  edges. It opens and turns through the two engine-composed Rooftop Stories pages. Previous,
+  Next, Play/Pause, arrow keys and horizontal swipes control it. Animation pauses outside
+  the viewport and in a hidden tab; reduced motion shows a still with manual view changes.
+  Without WebGL, the bundled cover and readable PDF link remain available.
+- The landing follows one original story: script, panel artwork, then composed page. The
+  sections vary with that material rather than repeating feature cards or closing CTAs.
 - The console is 2D on purpose: forms, filmstrips, and paper sheets, with motion limited to
-  state changes.
-- Day theme is a full printed-paper palette with its own text-safe amber. Both themes pass
-  WCAG AA for every text token on every surface (tested).
+  state changes. Flat editor sections keep the artwork and next action visible; technical
+  lifecycle detail is available in a disclosure. Mobile navigation retains stage names.
+- Both themes share their tokens with the landing; text contrast, control edges and focus
+  colors are tested on every main surface. No new UI or Three.js dependency was added.
 - The favicon mark is a placeholder drawn from a page layout; replace it with the official
   mark when one exists.
+
+The [editorial redesign audit](anti-slop/audit-002-2026-10-09.md) records the selected
+direction and validation. The [earlier cleanup audit](anti-slop/audit-001-2026-10-09.md)
+is historical and describes the superseded dark-and-amber design.
 
 ## Bundled third-party files
 
 | File | Source | License |
 | --- | --- | --- |
 | `web/assets/vendor/three.module.min.js`, `three.core.min.js` | `three@0.185.1` from npm (`build/`), SHA-256 `86bcee24…beb6` and `05b26093…a90` | MIT (`three-LICENSE.txt`) |
-| `web/assets/fonts/InstrumentSerif-*.woff2` | `google/fonts` `ofl/instrumentserif` at `5e8a3ba`, subset to Latin with fonttools | SIL OFL 1.1 |
 | `web/assets/fonts/Manrope-Variable.woff2` | `google/fonts` `ofl/manrope/Manrope[wght].ttf` at `5e8a3ba`, subset to Latin | SIL OFL 1.1 |
 | `web/assets/fonts/ComicNeue-Bold.ttf` | `wenn-id/comicsol` `assets/fonts` | SIL OFL 1.1 |
 

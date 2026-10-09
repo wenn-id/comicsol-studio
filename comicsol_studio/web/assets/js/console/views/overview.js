@@ -43,10 +43,10 @@ export function renderOverview(container, ctx) {
       h(
         "section",
         { class: "next", "aria-labelledby": "next-title" },
-        h("p", { class: "next__label" }, "Next"),
+        h("p", { class: "next__label" }, "Next step"),
         h("h2", { class: "next__title", id: "next-title" }, step.title),
         h("p", { class: "next__detail" }, step.detail),
-        step.stage !== "overview" ? h("a", { class: "btn btn--amber", href: ctx.projectPath(project.id, step.stage, query), "data-link": true }, h("span", {}, "Continue")) : null,
+        step.stage !== "overview" ? h("a", { class: "btn btn--amber", href: ctx.projectPath(project.id, step.stage, query), "data-link": true }, h("span", {}, { plan: "Open plan", render: "Open render jobs", review: "Open review", finish: "Open export" }[step.stage])) : null,
       ),
 
       runs.length
@@ -59,9 +59,9 @@ export function renderOverview(container, ctx) {
         : null,
 
       h(
-        "section",
+        "details",
         { class: "lifecycle-strip", "aria-labelledby": "lifecycle-title" },
-        h("h2", { class: "section-title", id: "lifecycle-title" }, "Engine lifecycle"),
+        h("summary", { class: "section-title", id: "lifecycle-title" }, "Engine lifecycle"),
         h(
           "ol",
           { class: "steps" },
@@ -82,7 +82,7 @@ export function renderOverview(container, ctx) {
         h(
           "section",
           { class: "panel-box", "aria-labelledby": "stages-title" },
-          h("h2", { class: "section-title", id: "stages-title" }, "Stages, as the engine sees them"),
+          h("h2", { class: "section-title", id: "stages-title" }, "Project progress"),
           h(
             "dl",
             { class: "stage-list" },
@@ -145,7 +145,7 @@ function validationBox(ctx) {
     "section",
     { class: "panel-box", "aria-labelledby": "validation-title" },
     h("div", { class: "section-head" }, h("h2", { class: "section-title", id: "validation-title" }, "Check the whole project"), run),
-    h("p", { class: "muted" }, "Runs the engine's full validator over every artifact on disk. Issues before a stage is reached are expected."),
+    h("p", { class: "muted" }, "Checks the saved project files. Unfinished stages may still have issues."),
     output,
   );
 }

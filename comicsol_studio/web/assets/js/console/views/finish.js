@@ -41,16 +41,16 @@ export function renderFinish(container, ctx) {
   });
 
   let status;
-  if (finished) status = h("p", { class: "next__detail" }, project.status === "COMPLETE" ? "Bound without warnings." : `Bound with ${project.warnings.length} ${project.warnings.length === 1 ? "warning" : "warnings"} recorded in the QA report.`);
-  else if (project.pagesReviewed) status = h("p", { class: "next__detail" }, "Every page is reviewed. The engine will export the PDF, decode and verify every page, render the QA report, and run its final validation.");
-  else status = h("p", { class: "next__detail" }, "Review and accept every composed page first. The engine refuses to bind a book whose pages have no current review.");
+  if (finished) status = h("p", { class: "next__detail" }, project.status === "COMPLETE" ? "PDF verified. No warnings in the review report." : `PDF verified with ${project.warnings.length} ${project.warnings.length === 1 ? "warning" : "warnings"} recorded in the QA report.`);
+  else if (project.pagesReviewed) status = h("p", { class: "next__detail" }, "All pages are reviewed. Finish the comic to export a verified PDF and review report.");
+  else status = h("p", { class: "next__detail" }, "Review and accept each composed page before exporting the PDF.");
 
   mount(
     container,
     h(
       "div",
       { class: "page page--finish" },
-      h("header", { class: "page__head" }, h("div", {}, h("p", { class: "page__eyebrow" }, "Finish"), h("h1", { class: "page__title" }, finished ? "Bound." : "Bind the book"))),
+      h("header", { class: "page__head" }, h("div", {}, h("p", { class: "page__eyebrow" }, "Finish"), h("h1", { class: "page__title" }, finished ? "Ready to print" : "Export your comic"))),
       h(
         "section",
         { class: "next", "aria-label": "Binding" },

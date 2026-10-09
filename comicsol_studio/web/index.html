@@ -1,211 +1,106 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="day">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Comic Sol Studio</title>
-  <meta name="description" content="Comic Sol Studio turns your story into a lettered, print-ready comic on your own machine. Plan it, render it with the image model you choose, review every panel, and bind a verified PDF.">
-  <meta name="theme-color" content="#08090b">
+  <meta name="description" content="Write a story, make the artwork, and assemble a comic you can print. A local studio built on the Comic Sol engine.">
+  <meta name="theme-color" content="#f4f1ea">
   <link rel="icon" href="/assets/img/mark.svg" type="image/svg+xml">
-  <link rel="preload" href="/assets/fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/Manrope-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/img/rooftop-cover.webp" as="image">
   <link rel="modulepreload" href="/assets/vendor/three.core.min.js">
   <link rel="modulepreload" href="/assets/vendor/three.module.min.js">
   <link rel="stylesheet" href="/assets/css/tokens.css">
   <link rel="stylesheet" href="/assets/css/landing.css">
 </head>
 <body class="landing">
-  <a class="skip-link" href="#making">Skip to the making of a page</a>
-
-  <header class="masthead" data-masthead>
-    <a class="wordmark" href="#top" aria-label="Comic Sol Studio, back to top">
-      <img src="/assets/img/mark.svg" alt="" width="28" height="28">
-      <span class="wordmark__name">Comic Sol</span>
-      <span class="wordmark__sub">Studio</span>
-    </a>
-    <nav class="masthead__nav" aria-label="Sections">
-      <a href="#making">The making</a>
-      <a href="#engine">The engine</a>
-      <a href="#run">Run it</a>
+  <a class="skip-link" href="#making">Skip to the comic</a>
+  <header class="masthead">
+    <a class="wordmark" href="#top" aria-label="Comic Sol Studio, back to top">Comic Sol Studio</a>
+    <nav aria-label="Main navigation">
+      <a href="#making">The comic</a>
+      <a href="/studio/">Studio</a>
+      <a href="https://github.com/wenn-id/comicsol-studio">Source</a>
     </nav>
-    <a class="button button--amber button--small" href="/studio/">Open the Studio</a>
   </header>
-
-  <main id="main">
+  <main>
     <section class="hero" id="top" data-hero aria-labelledby="hero-title">
-      <div class="hero__stage">
-        <canvas class="hero__canvas" data-book-canvas aria-hidden="true"></canvas>
-        <div class="hero__poster" data-poster aria-hidden="true"></div>
-        <div class="hero__veil" aria-hidden="true"></div>
+      <div class="hero__copy">
+        <h1 id="hero-title">Stories,<br>made into pages.</h1>
+        <p class="hero__lede">Write, draw, assemble.</p>
+        <a class="button" href="/studio/">Start a comic <span aria-hidden="true">↗</span></a>
+        <p class="hero__note">A local workspace for the story,<br>the artwork, and the finished PDF.</p>
+      </div>
+      <div class="book-viewer" role="region" aria-label="Rooftop Stories interactive book" aria-describedby="book-help">
+        <p id="book-help" class="visually-hidden">Use Left and Right arrow keys, the Previous and Next buttons, or a horizontal swipe to turn the book. Pause stops the automatic animation.</p>
+        <div class="book-stage">
+          <canvas data-book-canvas aria-hidden="true"></canvas>
+          <img class="book-poster" data-poster src="/assets/img/rooftop-cover.webp" alt="Rooftop Stories cover: Mena in a red hoodie above the city.">
+        </div>
+        <div class="book-controls" data-book-controls hidden>
+          <button type="button" data-book-prev aria-label="Previous book view">Previous</button>
+          <span data-book-label aria-live="polite" aria-atomic="true">Cover</span>
+          <button type="button" data-book-next aria-label="Next book view">Next</button>
+          <button class="book-controls__play" type="button" data-book-play aria-label="Pause book animation">Pause</button>
+        </div>
+        <p class="book-caption">Rooftop Stories · An original two-page comic.<br>AI-created artwork, lettered and composed with Comic Sol.<br><a href="/assets/comics/rooftop-stories.pdf" target="_blank" rel="noopener">Read the comic (PDF)</a></p>
+      </div>
+    </section>
+    <section class="making" id="making" aria-labelledby="making-title">
+      <h2 id="making-title">A story in three materials.</h2>
+      <div class="script-spread">
+        <div class="script-spread__copy">
+          <h3 class="step-label">01. Write the story</h3>
+          <pre class="script" aria-label="Excerpt from Rooftop Stories">EXT. ROOFTOP / LATE AFTERNOON
 
-        <div class="hero__copy" data-chapter="0">
-          <p class="hero__kicker">A studio for the Comic Sol engine</p>
-          <h1 class="hero__title" id="hero-title">
-            Every page,<br><em>bound by you.</em>
-          </h1>
-          <p class="hero__lede">
-            Write a story, shape the cast and the storyboard, render panels with the image
-            model you choose, and review each one. The engine letters the balloons, composes
-            the pages, and binds a verified PDF. All of it runs on your own machine.
-          </p>
-          <div class="hero__actions">
-            <a class="button button--amber" href="/studio/">Open the Studio</a>
-            <a class="button button--ghost" href="#making">See how a page is made</a>
+Mena pushes open the stairwell door.
+The city is still rushing below.
+
+She sits by the parapet.
+A pigeon settles beside her.
+
+The noise hasn't changed.
+But there is room to breathe.</pre>
+          <p class="section-note">Start with an idea or a complete script. Shape the cast and decide what happens in each panel.</p>
+        </div>
+        <figure class="wide-panel">
+          <img src="/assets/img/rooftop-p01-02.webp" width="1472" height="1120" loading="lazy" alt="Mena sits on a rooftop, looking across the city in her red hoodie.">
+          <figcaption>One place, one character, a small change.</figcaption>
+        </figure>
+      </div>
+      <div class="page-spread">
+        <figure class="finished-page">
+          <img src="/assets/img/rooftop-page-2.webp" width="1600" height="2400" loading="lazy" alt="Page two of Rooftop Stories, with two ink panels and captions added by Comic Sol.">
+          <figcaption>Rooftop Stories / Page 02</figcaption>
+        </figure>
+        <div class="page-spread__copy">
+          <div>
+            <h3 class="step-label">02. Make room for the page</h3>
+            <p>Choose the frames. Keep the character consistent. Bring your own artwork, or render it with a connected model.</p>
+            <img class="detail-panel" src="/assets/img/rooftop-p02-01.webp" width="1472" height="1120" loading="lazy" alt="Close-up of Mena noticing a pigeon beside her on the parapet.">
+          </div>
+          <div>
+            <h3 class="step-label">03. Read before you export</h3>
+            <p>Review the panels, then the lettered pages. Comic Sol assembles the artwork and text into a checked PDF.</p>
+            <a class="text-link" href="/studio/">Open the workspace <span aria-hidden="true">↗</span></a>
           </div>
         </div>
-
-        <ol class="hero__chapters" aria-label="What happens as the book opens">
-          <li class="chapter" data-chapter="1">
-            <span class="chapter__index">I</span>
-            <p class="chapter__title">The plan opens the book.</p>
-            <p class="chapter__text">A logline, a cast with fixed visual traits, and a storyboard laid
-              out on five exact page layouts. The engine validates every field.</p>
-          </li>
-          <li class="chapter" data-chapter="2">
-            <span class="chapter__index">II</span>
-            <p class="chapter__title">Panels arrive one by one.</p>
-            <p class="chapter__text">Character references first, then every panel at its exact size,
-              each prompt carrying the same identity lock. Upload your own art or render with a
-              connected model.</p>
-          </li>
-          <li class="chapter" data-chapter="3">
-            <span class="chapter__index">III</span>
-            <p class="chapter__title">Lettered, composed, bound.</p>
-            <p class="chapter__text">Balloons are drawn by the engine with tails aimed at the speaker,
-              pages are composed, and every page of the PDF is checked before it is yours.</p>
-          </li>
-        </ol>
-
-        <div class="hero__progress" aria-hidden="true">
-          <span class="hero__progress-fill" data-progress></span>
-        </div>
-        <p class="hero__scroll-hint" data-scroll-hint aria-hidden="true">Scroll to open the book</p>
       </div>
     </section>
-
-    <section class="making" id="making" aria-labelledby="making-title">
-      <div class="making__intro">
-        <p class="eyebrow">The making of a page</p>
-        <h2 id="making-title" class="display">From one sentence<br>to a bound book.</h2>
-        <p class="making__lede">The engine moves a project through a fixed lifecycle. Studio shows you
-          where you are, what the engine needs next, and refuses nothing silently: when a step is
-          not ready, it tells you why.</p>
-      </div>
-
-      <ol class="lifecycle" aria-label="Project lifecycle">
-        <li class="stage">
-          <p class="stage__status">INIT</p>
-          <h3 class="stage__name">Begin</h3>
-          <p>A short prompt, a pasted story up to 200 KB, one of the engine's starter comics, or a
-            portable archive from another machine.</p>
-        </li>
-        <li class="stage">
-          <p class="stage__status">PLANNED · SCRIPTED · STORYBOARDED</p>
-          <h3 class="stage__name">Plan</h3>
-          <p>Story beats, two to five scenes, a cast with visual fingerprints, and one to four pages
-            of panels. Draft it with Claude or GPT, or write it yourself in the plan editor.</p>
-        </li>
-        <li class="stage">
-          <p class="stage__status">REFERENCES_READY · PANELS_READY</p>
-          <h3 class="stage__name">Render</h3>
-          <p>Reference sheets you approve, then panels at the exact pixel size of their frame.</p>
-        </li>
-        <li class="stage stage--wide">
-          <p class="stage__status">QA_READY</p>
-          <h3 class="stage__name">Review</h3>
-          <p>Every panel is judged on seven checks before it can be lettered, and every character on
-            seven traits. Evidence has to name what is actually in the image.</p>
-          <ul class="checklist" aria-label="Panel checks">
-            <li>character identity</li>
-            <li>anatomy</li>
-            <li>action</li>
-            <li>composition</li>
-            <li>continuity</li>
-            <li>text-free art</li>
-            <li>technical</li>
-          </ul>
-        </li>
-        <li class="stage">
-          <p class="stage__status">LETTERED · COMPOSED</p>
-          <h3 class="stage__name">Letter and compose</h3>
-          <p>Balloons, captions, and lettered effects drawn by the engine in Comic Neue, then pages
-            assembled and checked for clipped text and crowding.</p>
-        </li>
-        <li class="stage">
-          <p class="stage__status">EXPORTED · COMPLETE</p>
-          <h3 class="stage__name">Bind</h3>
-          <p>A PDF whose every page is decoded and verified, a QA report, and an archive that opens
-            in any Comic Sol install.</p>
-        </li>
-      </ol>
-    </section>
-
-    <section class="engine" id="engine" aria-labelledby="engine-title">
-      <div class="engine__head">
-        <p class="eyebrow">The engine underneath</p>
-        <h2 id="engine-title" class="display">Exact where it matters.</h2>
-      </div>
-
-      <figure class="layouts" aria-labelledby="layouts-caption">
+    <section class="layouts-section" aria-labelledby="layouts-title">
+      <div><h2 id="layouts-title">A frame for each beat.</h2><p>The engine's page layouts, ready for your storyboard.</p></div>
+      <figure class="layouts">
         <div class="layouts__row" data-layouts></div>
-        <figcaption id="layouts-caption" class="layouts__caption">
-          The five page layouts, drawn from the engine's own rectangles: 1600 × 2400 px pages,
-          64 px margins, 32 px gutters.
-        </figcaption>
+        <figcaption id="layouts-caption">1600 × 2400 px pages. 64 px margins. 32 px gutters.</figcaption>
       </figure>
-
-      <div class="facts">
-        <article class="fact fact--lead">
-          <h3>One identity, every panel.</h3>
-          <p>The engine derives an identity pack from your cast and writes the same identity lock into
-            every panel prompt, with the approved reference sheets attached in a fixed order. A retry
-            asks for the same character, not a paraphrase of one.</p>
-        </article>
-        <article class="fact">
-          <h3>Lettering is never generated.</h3>
-          <p>Image models are told to leave room and draw no words. The engine sets every balloon
-            itself and refuses text that does not fit its panel.</p>
-        </article>
-        <article class="fact">
-          <h3>Revisions you can trust.</h3>
-          <p>Every write is tied to the version you were looking at. If an agent or another window
-            changed the project, Studio stops and shows you the newer one.</p>
-        </article>
-      </div>
     </section>
-
-    <section class="run" id="run" aria-labelledby="run-title">
-      <div class="run__copy">
-        <p class="eyebrow">Run it</p>
-        <h2 id="run-title" class="display">Your machine,<br>your keys.</h2>
-        <p>Studio listens on 127.0.0.1 only. Projects are folders you own. Model keys stay in the
-          environment you start Studio from and never reach the page. Without any key, every step
-          still works: upload your own art and review it yourself.</p>
-      </div>
-      <div class="run__code">
-        <p class="run__label" id="run-label">Start Studio</p>
-        <pre aria-labelledby="run-label"><code>pip install -e .
-comicsol-studio --data-root /absolute/path/to/studio-data</code></pre>
-        <p class="run__label" id="keys-label">Optional model routes</p>
-        <pre aria-labelledby="keys-label"><code>ANTHROPIC_API_KEY=…   plan drafts and visual review with Claude
-OPENAI_API_KEY=…      plan drafts, review, and panel rendering</code></pre>
-      </div>
-    </section>
-
-    <section class="closer" aria-labelledby="closer-title">
-      <h2 id="closer-title" class="closer__title">Open the book.</h2>
-      <a class="button button--amber button--large" href="/studio/">Open the Studio</a>
+    <section class="local" id="run" aria-labelledby="local-title">
+      <div><h2 id="local-title">Your story. Your workspace.</h2><p>Install Studio and keep the project in a folder on your machine. Write the plan, upload artwork, and review it yourself. Connect a model when you need one.</p><a class="text-link" href="https://github.com/wenn-id/comicsol-studio#run-it">Installation instructions <span aria-hidden="true">↗</span></a></div>
+      <p class="local__note">The story, references, panels, and reviews travel together in a portable archive. Connected models receive the material needed for their task.</p>
     </section>
   </main>
-
-  <footer class="footer">
-    <p>Comic Sol Studio, MIT licensed.</p>
-    <p>
-      <a href="https://github.com/wenn-id/comicsol">Comic Sol engine</a>
-      <a href="https://github.com/wenn-id/comicsol-studio">Studio source</a>
-    </p>
-  </footer>
-
+  <footer class="footer"><span>Comic Sol Studio</span><div><a href="/studio/">Studio</a><a href="https://github.com/wenn-id/comicsol">Comic Sol engine</a><a href="https://github.com/wenn-id/comicsol-studio">Source</a></div></footer>
   <script type="module" src="/assets/js/landing/main.js"></script>
 </body>
 </html>

@@ -43,6 +43,7 @@ comicsol_studio = [
     "web/assets/fonts/*.txt",
     "web/assets/img/*.svg",
     "web/assets/img/*.webp",
+    "web/assets/comics/*.pdf",
 ]
 
 [tool.ruff]

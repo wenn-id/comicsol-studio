@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "characters": [
+    {
+      "id": "mena",
+      "name": "Mena",
+      "role": "a city resident looking for a quiet moment",
+      "pronouns": "she/her",
+      "age_band": "adult",
+      "personality": [
+        "observant",
+        "thoughtful"
+      ],
+      "motivation": "find a little breathing room after a busy day",
+      "speech": "short first-person captions",
+      "reference_path": "references/characters/mena.png",
+      "visual_fingerprint": {
+        "face": "soft rounded face, warm medium-brown skin, dark eyes and a small straight nose",
+        "hair": "short messy tightly curly black hair",
+        "silhouette": "slim ordinary adult physique with a relaxed loose hoodie",
+        "wardrobe": "terracotta red hoodie with hood down, black straight-legged trousers, off-white low-top canvas sneakers",
+        "palette": [
+          "terracotta red",
+          "near-black ink",
+          "warm white paper"
+        ],
+        "signature_props": [
+          "hoodie drawstrings"
+        ],
+        "invariants": [
+          "curly black hair",
+          "terracotta red hoodie",
+          "black trousers",
+          "off-white canvas sneakers"
+        ],
+        "avoid": [
+          "bags",
+          "logos",
+          "generated text",
+          "straight hair",
+          "amber scarf"
+        ]
+      }
+    }
+  ]
+}

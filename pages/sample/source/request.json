@@ -1,0 +1,13 @@
+{
+  "title": "Rooftop Stories",
+  "language": "en",
+  "mode": "short_prompt",
+  "page_count": 2,
+  "art": {
+    "mena": "../../../comicsol_studio/web/assets/img/rooftop-mena.webp",
+    "p01-01": "../../../comicsol_studio/web/assets/img/rooftop-p01-01.webp",
+    "p01-02": "../../../comicsol_studio/web/assets/img/rooftop-p01-02.webp",
+    "p02-01": "../../../comicsol_studio/web/assets/img/rooftop-p02-01.webp",
+    "p02-02": "../../../comicsol_studio/web/assets/img/rooftop-p02-02.webp"
+  }
+}

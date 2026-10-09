@@ -1,0 +1,33 @@
+{
+  "reviewed_by": "Codex visual inspection of generated artwork",
+  "checks": [
+    {
+      "id": "character-identity",
+      "evidence": "Mena retains the curly black hair, red hood-down hoodie, black trousers and off-white sneakers from the reference; visible face shape and skin tone remain consistent."
+    },
+    {
+      "id": "anatomy",
+      "evidence": "Visible limbs, hands and seated or standing pose are coherent; sneakers and contact with the rooftop are readable."
+    },
+    {
+      "id": "action",
+      "evidence": "Mena sits with relaxed shoulders facing the skyline, and the pigeon remains beside her."
+    },
+    {
+      "id": "composition",
+      "evidence": "Small Mena at lower left and the wide city panorama match the final storyboard beat."
+    },
+    {
+      "id": "continuity",
+      "evidence": "The concrete parapet, roof antennas, contemporary city and daylight maintain the same rooftop setting; Mena's outfit is unchanged."
+    },
+    {
+      "id": "text-free",
+      "evidence": "The artwork has no embedded captions, speech balloons, readable signs, logos or watermarks."
+    },
+    {
+      "id": "technical",
+      "evidence": "Detailed ink artwork is clear and non-blank, with no major rendering corruption; Studio conforms it to the panel's planned size."
+    }
+  ]
+}

@@ -78,7 +78,7 @@ export function renderRender(container, ctx) {
       !generation.prepared
         ? emptyState(
             "No render jobs yet.",
-            "Preparing asks the engine to write one job per character reference sheet. After you approve those, it writes one job per panel, each carrying the identity lock and the approved references.",
+            "Prepare the character references first. Once they are approved, refresh the jobs to make the panels.",
           )
         : h(
             "div",
@@ -90,7 +90,7 @@ export function renderRender(container, ctx) {
                 ? h("p", { class: "muted" }, "Panel jobs appear after every reference sheet is approved and you refresh the jobs.")
                 : null,
           ),
-      renderers.length ? null : h("p", { class: "hint-line" }, "No image model is connected. Upload your own art for each job, or set OPENAI_API_KEY before starting Studio to render here."),
+      renderers.length ? null : h("p", { class: "hint-line" }, "Upload artwork for each job. To render with a model, connect one when launching Studio."),
     ),
   );
 }
@@ -153,6 +153,7 @@ function jobCard(ctx, job, rendering) {
     type: "file",
     accept: "image/png,image/jpeg,image/webp",
     class: "visually-hidden",
+    "aria-label": `Upload artwork for ${name}`,
     onchange: (event) => event.target.files[0] && upload(ctx, job, event.target.files[0], card),
   });
   const card = h(
@@ -174,8 +175,8 @@ function jobCard(ctx, job, rendering) {
     },
     h(
       "div",
-      { class: "job__art", style: { aspectRatio: `${job.width} / ${job.height}` } },
-      image ? h("img", { src: image, alt: `${name} ${job.candidate ? "candidate" : "image"}`, loading: "lazy", decoding: "async" }) : h("span", { class: "job__empty" }, `${job.width} × ${job.height}`),
+      { class: "job__art", style: { aspectRatio: image ? `${job.width} / ${job.height}` : "auto" } },
+      image ? h("img", { src: image, alt: `${name} ${job.candidate ? "candidate" : "image"}`, loading: "lazy", decoding: "async" }) : h("span", { class: "job__empty" }, `Awaiting artwork · ${job.width} × ${job.height} px`),
       rendering ? h("span", { class: "job__working" }, h("span", { class: "spinner spinner--small", "aria-hidden": "true" }), "Rendering") : null,
     ),
     h(

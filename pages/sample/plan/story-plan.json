@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "title": "Rooftop Stories",
+  "logline": "After a busy day, Mena finds a little breathing room on a city rooftop.",
+  "theme": "A small change of perspective can make space in an ordinary day.",
+  "setting": "An apartment rooftop above a busy contemporary city, with a concrete parapet, antennas and a distant water tank.",
+  "tone": ["quiet", "reflective", "hopeful"],
+  "rating": "teen",
+  "beginning": "Mena steps out of the rooftop stairwell after a noisy day.",
+  "turn": "She sits down and notices a pigeon has joined her.",
+  "climax": "Mena watches the bird instead of rushing back downstairs.",
+  "ending": "The same city fills the view, but Mena's shoulders are relaxed.",
+  "scenes": [
+    {"id": "rooftop-arrival", "location": "an apartment rooftop", "time": "late afternoon", "characters": ["mena"], "purpose": "leave the rush of the day behind", "continuity_anchor": "concrete parapet, roof antennas and a cylindrical water tank to the right"},
+    {"id": "rooftop-pause", "location": "the same apartment rooftop", "time": "late afternoon", "characters": ["mena"], "purpose": "find a moment of breathing room", "continuity_anchor": "concrete parapet, roof antennas and a cylindrical water tank to the right"}
+  ]
+}

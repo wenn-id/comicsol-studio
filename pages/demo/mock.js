@@ -242,7 +242,7 @@
         <button type="button" class="demo-panel__step" data-demo="next">Next step</button>
       </div>
       <div class="demo-panel__body" id="demo-panel-body">
-        <p>No server runs here. Studio replays a session recorded against the real Comic Sol engine with the Sunlight Courier sample. Uploads and reviews you enter use the recorded results.</p>
+        <p>No server runs here. Studio replays Rooftop Stories, an original comic recorded against the real Comic Sol engine. Uploads and reviews you enter use the recorded results.</p>
         <p class="demo-panel__now" data-demo-now></p>
         <p class="demo-panel__next" data-demo-next></p>
         <div class="demo-panel__actions">

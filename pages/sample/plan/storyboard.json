@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0",
+  "pages": [
+    {
+      "number": 1,
+      "layout": "two-horizontal",
+      "panels": [
+        {
+          "id": "p01-01",
+          "order": 1,
+          "scene_id": "rooftop-arrival",
+          "characters": [
+            "mena"
+          ],
+          "beat": "Mena leaves the noisy day behind",
+          "shot": "wide three-quarter view",
+          "action": "Mena pushes open the stairwell door and steps onto the rooftop.",
+          "expression": "tired but attentive",
+          "lighting": "soft late-afternoon daylight",
+          "composition": "Mena left of center, doorway left, city to the right, quiet upper-left caption space",
+          "continuity": [
+            "mena:terracotta red hoodie",
+            "rooftop-arrival:concrete parapet, roof antennas and a cylindrical water tank to the right"
+          ],
+          "negative": [
+            "generated text",
+            "speech bubbles",
+            "watermark"
+          ],
+          "rect": {
+            "x": 64,
+            "y": 64,
+            "width": 1472,
+            "height": 1120
+          },
+          "text": [
+            {
+              "id": "p01-01-t01",
+              "kind": "caption",
+              "speaker": null,
+              "content": "The city kept moving.",
+              "anchor": "top-left",
+              "priority": 1
+            }
+          ]
+        },
+        {
+          "id": "p01-02",
+          "order": 2,
+          "scene_id": "rooftop-arrival",
+          "characters": [
+            "mena"
+          ],
+          "beat": "She takes a seat above the city",
+          "shot": "medium-wide three-quarter portrait",
+          "action": "Mena sits safely on the broad parapet with both sneakers supported on the rooftop floor.",
+          "expression": "thoughtful and easing",
+          "lighting": "soft late-afternoon daylight",
+          "composition": "seated Mena left of center, skyline and water tank right, open upper-left sky",
+          "continuity": [
+            "mena:terracotta red hoodie",
+            "rooftop-arrival:concrete parapet, roof antennas and a cylindrical water tank to the right"
+          ],
+          "negative": [
+            "generated text",
+            "speech bubbles",
+            "watermark"
+          ],
+          "rect": {
+            "x": 64,
+            "y": 1216,
+            "width": 1472,
+            "height": 1120
+          },
+          "text": [
+            {
+              "id": "p01-02-t01",
+              "kind": "caption",
+              "speaker": null,
+              "content": "I climbed until I could hear myself.",
+              "anchor": "top-left",
+              "priority": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "layout": "two-horizontal",
+      "panels": [
+        {
+          "id": "p02-01",
+          "order": 1,
+          "scene_id": "rooftop-pause",
+          "characters": [
+            "mena"
+          ],
+          "beat": "A pigeon shares the quiet moment",
+          "shot": "close three-quarter portrait",
+          "action": "Mena glances at a pigeon perched beside her, hands resting on her raised knee.",
+          "expression": "a small relieved smile",
+          "lighting": "soft late-afternoon daylight",
+          "composition": "Mena centered, pigeon on the right, clear upper-left sky",
+          "continuity": [
+            "mena:terracotta red hoodie",
+            "rooftop-pause:concrete parapet, roof antennas and a cylindrical water tank to the right"
+          ],
+          "negative": [
+            "generated text",
+            "speech bubbles",
+            "watermark"
+          ],
+          "rect": {
+            "x": 64,
+            "y": 64,
+            "width": 1472,
+            "height": 1120
+          },
+          "text": [
+            {
+              "id": "p02-01-t01",
+              "kind": "caption",
+              "speaker": null,
+              "content": "A pigeon had the same idea.",
+              "anchor": "top-left",
+              "priority": 1
+            }
+          ]
+        },
+        {
+          "id": "p02-02",
+          "order": 2,
+          "scene_id": "rooftop-pause",
+          "characters": [
+            "mena"
+          ],
+          "beat": "The city is the same, her perspective has changed",
+          "shot": "very wide rear view",
+          "action": "Mena sits relaxed with the pigeon beside her and looks across the rooftops.",
+          "expression": "quiet relief shown through relaxed shoulders",
+          "lighting": "soft late-afternoon daylight",
+          "composition": "small seated Mena lower-left, broad city panorama, water tank right, generous white sky",
+          "continuity": [
+            "mena:terracotta red hoodie",
+            "rooftop-pause:concrete parapet, roof antennas and a cylindrical water tank to the right"
+          ],
+          "negative": [
+            "generated text",
+            "speech bubbles",
+            "watermark"
+          ],
+          "rect": {
+            "x": 64,
+            "y": 1216,
+            "width": 1472,
+            "height": 1120
+          },
+          "text": [
+            {
+              "id": "p02-02-t01",
+              "kind": "caption",
+              "speaker": null,
+              "content": "Same city. A little more room.",
+              "anchor": "top-left",
+              "priority": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

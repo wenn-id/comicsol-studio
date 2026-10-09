@@ -55,7 +55,6 @@ const ICONS = {
   search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4",
   arrowLeft: "M19 12H5M11 6l-6 6 6 6",
   book: "M4 5c3-1 5-1 8 1 3-2 5-2 8-1v14c-3-1-5-1-8 1-3-2-5-2-8-1zM12 6v14",
-  spark: "M12 3v6M12 15v6M3 12h6M15 12h6",
 };
 
 export function icon(name, size = 18) {
