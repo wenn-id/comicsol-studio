@@ -6,29 +6,40 @@ Two independent surfaces:
 
 ## 1. Prerequisites
 
-Prepare Ubuntu 24.04 with Python 3.11+ (Ubuntu 24.04 ships 3.12), Git, enough
-storage for PNG/PDF files, and SSH. Add 2FA to GitHub and Cloudflare accounts.
-Restrict SSH to your IP, use SSH keys, and do not open port 8766.
+Prepare an Ubuntu host with working APT, Git, curl, enough storage for PNG/PDF,
+and SSH. Ubuntu 26.04 ships Python 3.14, while the project's CI tests use 3.11.
+Install isolated Python 3.11 via uv into /opt/comicsol-python; do not replace
+the system interpreter. Add 2FA to GitHub and Cloudflare accounts. Restrict SSH
+to your IP, use SSH keys, and do not open port 8766.
 Don't upload tokens or the environment file to Git.
 
 ## 2. VPS setup
 
-Run on the VPS as a sudo-capable operator:
+Run on the VPS as the SSH user with sudo privileges.
+Keep the Python runtime in /opt, readable by the restricted service user:
 
 ```bash
 sudo apt update
-sudo apt install -y git python3 python3-venv
+sudo apt install -y git curl ca-certificates
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+sudo install -d -o "$USER" -g "$USER" -m 755 /opt/comicsol-python
+UV_PYTHON_INSTALL_DIR=/opt/comicsol-python uv python install 3.11
+
 sudo useradd --system --home-dir /var/lib/comicsol-studio --shell /usr/sbin/nologin comicsol
-sudo mkdir -p /opt /var/lib/comicsol-studio /etc/comicsol-studio
-sudo chown comicsol:comicsol /var/lib/comicsol-studio
-sudo chmod 700 /var/lib/comicsol-studio /etc/comicsol-studio
+sudo install -d -o comicsol -g comicsol -m 700 /var/lib/comicsol-studio
+sudo install -d -m 700 /etc/comicsol-studio
 sudo git clone https://github.com/wenn-id/comicsol-studio.git /opt/comicsol-studio
+sudo chown -R "$USER":"$USER" /opt/comicsol-studio
 cd /opt/comicsol-studio
-sudo git checkout main
-sudo python3 -m venv .venv
-sudo .venv/bin/python -m pip install --upgrade pip
-sudo .venv/bin/python -m pip install .
+UV_PYTHON_INSTALL_DIR=/opt/comicsol-python uv venv --python 3.11 .venv
+uv pip install --python .venv/bin/python .
+.venv/bin/python --version
 ```
+
+Use the deployment branch until PR #5 has been merged and checked. Only
+then switch to main. The service account writes to /var/lib/comicsol-studio,
+not to the source checkout or the Python runtime.
 
 After the production PR is merged, pull `main` to get `deploy/`.
 Create `/etc/comicsol-studio/environment` (mode 600, root-owned) with:
