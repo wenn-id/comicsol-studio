@@ -1,0 +1,24 @@
+[Unit]
+Description=Comic Sol Studio (private Cloudflare Tunnel origin)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=comicsol
+Group=comicsol
+WorkingDirectory=/opt/comicsol-studio
+EnvironmentFile=/etc/comicsol-studio/environment
+ExecStart=/opt/comicsol-studio/.venv/bin/python -m comicsol_studio --data-root /var/lib/comicsol-studio
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/comicsol-studio
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
