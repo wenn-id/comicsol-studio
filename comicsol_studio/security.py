@@ -104,7 +104,10 @@ def same_origin(request: Request, config: StudioConfig) -> bool:
     origin = request.headers.get("origin")
     if origin is None:
         return True
-    return origin.lower() in {f"http://{host}" for host in config.allowed_hosts() if ":" in host}
+    local_origins = {f"http://{host}" for host in config.allowed_hosts() if ":" in host}
+    if config.public_origin:
+        local_origins.add(config.public_origin)
+    return origin.lower() in local_origins
 
 
 def require_writer(request: Request) -> None:
