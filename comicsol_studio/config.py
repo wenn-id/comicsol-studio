@@ -7,8 +7,10 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit
 
 DATA_ROOT_VAR = "COMICSOL_STUDIO_DATA_ROOT"
+PUBLIC_ORIGIN_VAR = "COMICSOL_STUDIO_PUBLIC_ORIGIN"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8766
 
@@ -22,6 +24,13 @@ DEFAULT_OPENAI_TEXT_MODEL = "gpt-5.4-mini"
 DEFAULT_ANTHROPIC_TEXT_MODEL = "claude-opus-5-5"
 
 _MODEL_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:@/-]{0,127}\Z")
+
+
+# Accept DNS hostnames only; the public listener always uses Cloudflare HTTPS.
+_PUBLIC_DNS_NAME = re.compile(
+    r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+"
+    r"[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?\Z"
+)
 
 
 class ConfigError(ValueError):
@@ -76,6 +85,7 @@ class StudioConfig:
     host: str = DEFAULT_HOST
     port: int = DEFAULT_PORT
     keys: ProviderKeys = field(default_factory=ProviderKeys)
+    public_origin: str | None = None
 
     def __post_init__(self) -> None:
         if not self.data_root.is_absolute():
@@ -84,6 +94,21 @@ class StudioConfig:
             raise ConfigError("Studio serves loopback addresses only")
         if not 0 < self.port < 65536:
             raise ConfigError("port must be between 1 and 65535")
+        if self.public_origin is not None:
+            parsed = urlsplit(self.public_origin)
+            hostname = parsed.hostname or ""
+            if (
+                parsed.scheme != "https"
+                or parsed.netloc != hostname
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+                or not _PUBLIC_DNS_NAME.fullmatch(hostname)
+            ):
+                raise ConfigError(
+                    f"{PUBLIC_ORIGIN_VAR} must be a bare HTTPS origin, e.g. "
+                    "https://studio.example.com (no path, port, or trailing slash)"
+                )
 
     @classmethod
     def from_env(
@@ -96,7 +121,12 @@ class StudioConfig:
         raw = data_root or environ.get(DATA_ROOT_VAR, "")
         if not raw:
             raise ConfigError(f"set {DATA_ROOT_VAR} or pass --data-root")
-        return cls(data_root=Path(raw), port=port, keys=ProviderKeys.from_env(environ))
+        return cls(
+            data_root=Path(raw),
+            port=port,
+            keys=ProviderKeys.from_env(environ),
+            public_origin=environ.get(PUBLIC_ORIGIN_VAR, "").strip() or None,
+        )
 
     @property
     def database_path(self) -> Path:
@@ -121,4 +151,7 @@ class StudioConfig:
     def allowed_hosts(self) -> frozenset[str]:
         """`Host` header values a browser on this machine sends to the server."""
         names = ("127.0.0.1", "localhost", "[::1]")
-        return frozenset({*(f"{name}:{self.port}" for name in names), *names})
+        allowed = {*(f"{name}:{self.port}" for name in names), *names}
+        if self.public_origin:
+            allowed.add(urlsplit(self.public_origin).hostname or "")
+        return frozenset(allowed)

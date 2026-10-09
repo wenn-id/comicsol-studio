@@ -69,7 +69,10 @@ router = APIRouter(prefix="/api", dependencies=[Depends(require_writer)])
 def session(request: Request) -> JSONResponse:
     token = request.app.state.csrf.issue()
     response = _json({"csrfToken": token, **studio(request).capabilities()})
-    response.set_cookie(CSRF_COOKIE, token, httponly=False, samesite="strict", path="/")
+    response.set_cookie(
+        CSRF_COOKIE, token, httponly=False, samesite="strict", path="/",
+        secure=bool(request.app.state.config.public_origin),
+    )
     return response
 
 
