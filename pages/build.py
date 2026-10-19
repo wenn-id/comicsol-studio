@@ -25,6 +25,8 @@ def rebase_rules(base: str) -> list[tuple[str, str]]:
     return [
         ('"/assets/', f'"{base}assets/'),
         ('"/studio', f'"{base}studio'),
+        ('"/login"', f'"{base}login"'),
+        ('"/logout"', f'"{base}logout"'),
         ("`/studio/", f"`{base}studio/"),
         ("/^\\/studio\\/p\\/", f"/^{escaped}studio\\/p\\/"),
         ('href: "/"', f'href: "{base}"'),

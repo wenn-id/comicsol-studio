@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Sign in · Comic Sol Studio</title>
+  <link rel="icon" href="/assets/img/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/login.css">
+</head>
+<body>
+  <main class="login">
+    <a class="login__brand" href="/" aria-label="Comic Sol home"><img src="/assets/img/mark.svg" alt="" width="28" height="28">Comic Sol <span>Studio</span></a>
+    <section class="login__card" aria-labelledby="login-title">
+      <p class="login__eyebrow">YOUR WORKSPACE</p>
+      <h1 id="login-title">Welcome back.</h1>
+      <p class="login__intro">Sign in to continue your story.</p>
+      <form method="post" action="/login">
+        <input type="hidden" name="csrf" value="{{csrf}}">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" maxlength="80" required autofocus>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
+        <p class="login__error" role="alert">{{error}}</p>
+        <button type="submit">Sign in</button>
+      </form>
+      <p class="login__note">You stay signed in on this browser for seven days.</p>
+    </section>
+  </main>
+</body>
+</html>

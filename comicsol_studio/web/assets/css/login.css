@@ -1,0 +1,15 @@
+.login { width: min(100% - 40px, 420px); margin: 0 auto; padding: clamp(40px, 10vh, 100px) 0; }
+.login__brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; }
+.login__brand span { color: var(--ivory-3); font-size: 13px; font-weight: 500; }
+.login__card { margin-top: 56px; }
+.login__eyebrow { color: var(--amber-text); font-size: 11px; font-weight: 800; letter-spacing: .15em; }
+h1 { font-size: clamp(32px, 6vw, 42px); line-height: 1.15; letter-spacing: -.04em; margin: 16px 0; }
+.login__intro { color: var(--ivory-2); margin: 0 0 36px; }
+label { display: block; margin: 20px 0 8px; font-size: 13px; font-weight: 700; }
+input:not([type="hidden"]) { width: 100%; min-height: 48px; border: 1px solid var(--control-edge); border-radius: var(--r2); padding: 10px 12px; background: var(--ink-2); }
+button { width: 100%; min-height: 48px; border: 0; border-radius: var(--r2); background: var(--amber); color: var(--on-amber); font-weight: 800; cursor: pointer; }
+button:hover { background: var(--amber-hi); }
+.login__error { color: var(--ember); font-size: 13px; }
+.login__error:empty { display: none; }
+form button { margin-top: 24px; }
+.login__note { margin-top: 24px; font-size: 12px; color: var(--ivory-3); }

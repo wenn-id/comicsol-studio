@@ -58,8 +58,10 @@ class CsrfTokens:
         return f"{nonce}.{self._sign(nonce)}"
 
     def valid(self, token: str) -> bool:
+        if len(token) > 256:
+            return False
         nonce, _, signature = token.partition(".")
-        return bool(nonce) and hmac.compare_digest(signature, self._sign(nonce))
+        return bool(nonce) and hmac.compare_digest(signature.encode(), self._sign(nonce).encode())
 
     def _sign(self, nonce: str) -> str:
         return hmac.new(self._secret, nonce.encode(), hashlib.sha256).hexdigest()
