@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from comicsol_studio.app import create_app
+from comicsol_studio.auth import AUTH_COOKIE, Login
 from comicsol_studio.config import StudioConfig, ConfigError
 from deploy.build_landing import build
 
@@ -24,8 +25,11 @@ class ProductionTests(unittest.TestCase):
 
     def test_https_host_csrf_and_secure_cookie(self):
         with tempfile.TemporaryDirectory() as temp:
+            login = Login(Path(temp))
+            login.set_credentials("owner", "a-test-password-123")
             app = create_app(StudioConfig(data_root=Path(temp), public_origin="https://studio.comicsol.com"))
             with TestClient(app, base_url="https://studio.comicsol.com") as client:
+                client.cookies.set(AUTH_COOKIE, login.authenticate("owner", "a-test-password-123"))
                 response = client.get("/api/session")
                 self.assertEqual(200, response.status_code)
                 self.assertIn("secure", response.headers["set-cookie"].lower())

@@ -2,7 +2,7 @@
 
 Two independent surfaces:
 - `comicsol.com` — public, *static landing only*, deployed via Cloudflare Pages.
-- `studio.comicsol.com` — private single-creator application, VPS + Cloudflare Tunnel + Cloudflare Access.
+- `studio.comicsol.com` — single-creator application, VPS + Cloudflare Tunnel + Studio password login.
 
 ## 1. Prerequisites
 
@@ -37,11 +37,9 @@ uv pip install --python .venv/bin/python .
 .venv/bin/python --version
 ```
 
-Use the deployment branch until PR #5 has been merged and checked. Only
-then switch to main. The service account writes to /var/lib/comicsol-studio,
+Use the reviewed deployment revision. The service account writes to /var/lib/comicsol-studio,
 not to the source checkout or the Python runtime.
 
-After the production PR is merged, pull `main` to get `deploy/`.
 Create `/etc/comicsol-studio/environment` (mode 600, root-owned) with:
 
 ```dotenv
@@ -54,6 +52,11 @@ COMICSOL_STUDIO_PUBLIC_ORIGIN=https://studio.comicsol.com
 Install the unit and start Studio:
 
 ```bash
+# Set the username and password interactively as the service user.
+# Passwords are hidden, must have at least 12 characters, and are stored only as salted hashes.
+sudo -u comicsol /opt/comicsol-studio/.venv/bin/python -m comicsol_studio \
+  --data-root /var/lib/comicsol-studio --set-login
+
 sudo chown root:root /etc/comicsol-studio/environment
 sudo chmod 600 /etc/comicsol-studio/environment
 sudo cp /opt/comicsol-studio/deploy/comicsol-studio.service /etc/systemd/system/
@@ -67,7 +70,7 @@ Expect `{"status":"ok"}`. Keep `/var/lib/comicsol-studio` on persistent disk.
 Back up the complete data root while the service is stopped, or use a
 SQLite-consistent snapshot plus the files. Restore-test regularly.
 
-## 3. Cloudflare Tunnel and Access
+## 3. Cloudflare Tunnel
 
 In the Cloudflare Zero Trust dashboard, create a remotely-managed Tunnel
 and follow Cloudflare's displayed `cloudflared` installation command on
@@ -78,17 +81,22 @@ Create a public hostname route:
 - Type: `HTTP`
 - Service URL: `http://localhost:8766`
 
-**Before publishing the hostname**, protect the application using
-Cloudflare Access > Applications > Add application > Self-hosted.
-Set application domain to `studio.comicsol.com`, configure an allow policy
-for the one intended creator's identity, and require an identity provider/OTP.
-Test the policy in an incognito browser; an unauthenticated visitor must not
-be able to read `/api/projects` or `/api/session`.
+Cloudflare Access is not required. Studio itself redirects visitors from `/studio/`
+to `/login` and returns HTTP 401 for unauthenticated API requests. If migrating an
+existing tunnel with an Access application, remove that Access application after
+verifying the Studio login through the new tunnel. Keep other Access applications intact.
 
-For additional production hardening, authenticate and verify Access JWTs
-at the Studio origin, or use a tunnel with an Access-enforcing origin,
-before adding other creators or sensitive projects. This version remains
-a **single-creator** product, not a multi-tenant SaaS.
+Test in an incognito browser: `/studio/` must show the username/password form;
+`/api/projects` and `/api/session` must return HTTP 401. Sign in, create a project,
+then sign out and verify the API is blocked again. Session cookies are Secure,
+HttpOnly and SameSite=Strict; sign-in attempts are limited to ten per five minutes
+across the workspace. Sessions persist across restarts and expire after seven days.
+Studio will refuse to start with a public origin until credentials are configured.
+This version remains a **single-creator** product, not a multi-tenant SaaS.
+
+To change or recover the password, run the same `--set-login` command over SSH.
+It revokes every old session immediately. Include `login.sqlite3` in data-root
+backups and reset the password after a restore to invalidate restored sessions.
 
 ## 4. Cloudflare Pages landing
 
@@ -112,7 +120,8 @@ demo recording. All landing CTAs point at `https://studio.comicsol.com/studio/`.
 
 - `https://comicsol.com` shows landing and book.
 - Open Studio points to `https://studio.comicsol.com/studio/`.
-- Unauthenticated Studio requests are blocked at Cloudflare Access.
+- Unauthenticated Studio pages redirect to `/login`; API and file requests return 401.
+- The username/password login and Sign out both work without Cloudflare Access.
 - Authenticated Studio session receives Secure CSRF cookie; create, reload,
   review, and PDF export all work.
 - VPS: `curl -fsS http://127.0.0.1:8766/healthz` reports healthy.

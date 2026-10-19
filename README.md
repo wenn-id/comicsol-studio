@@ -31,6 +31,26 @@ On Windows use `.venv\Scripts\python.exe`. `pip install` pulls the engine from
 Open `http://127.0.0.1:8766/` for the landing page or `http://127.0.0.1:8766/studio/` for
 the console. Studio binds loopback only.
 
+For hosting, set one owner username and password directly on the server:
+
+```bash
+.venv/bin/python -m comicsol_studio --data-root /absolute/path/for/studio-data --set-login
+```
+
+The command prompts for the password twice without displaying it. Use at least 12
+characters. Open `/studio/` to sign in; the browser stays signed in for seven days.
+Use **Sign out** in the Studio navigation to revoke that browser session. Running
+`--set-login` again resets the account and revokes all sessions immediately.
+Credentials are salted password hashes in `login.sqlite3` under the data root;
+passwords are never stored as text or passed in command-line arguments.
+
+Setting `COMICSOL_STUDIO_PUBLIC_ORIGIN` requires this login to be configured before
+the server starts. Studio protects every API route, including images and PDFs.
+Cloudflare Tunnel can route directly to Studio without Cloudflare Access.
+Local mode without a public origin remains available without a login until an owner
+account is configured. This is one shared creator workspace, not separate user accounts.
+See [deployment instructions](deploy/README.md) for the service setup.
+
 - `--port` changes the port (default 8766). `COMICSOL_STUDIO_DATA_ROOT` can replace
   `--data-root`.
 - Model routes are optional and appear only when their key is set in the environment that

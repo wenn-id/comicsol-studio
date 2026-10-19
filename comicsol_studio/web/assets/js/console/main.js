@@ -253,6 +253,7 @@ function renderRail() {
       project ? h("button", { type: "button", class: "rail__link", onclick: toggleDrawer, "aria-label": "Activity", "aria-expanded": String(!drawer.hidden) }, icon("activity"), h("span", {}, "Activity")) : null,
       h("button", { type: "button", class: "rail__link", onclick: toggleTheme, "aria-label": `Switch to ${theme === "day" ? "night" : "day"} theme` }, icon(theme === "day" ? "moon" : "sun"), h("span", {}, theme === "day" ? "Night" : "Day")),
       h("button", { type: "button", class: "rail__link", onclick: openPalette, "aria-label": "Commands" }, icon("search"), h("span", {}, "Commands"), h("kbd", {}, "Ctrl K")),
+      state.session?.loginEnabled ? h("button", { type: "button", class: "rail__link", onclick: () => act(() => api.logout()) }, "Sign out") : null,
       state.session ? h("p", { class: "rail__engine" }, `Comic Sol engine ${state.session.engine.version}`) : null,
     ),
   );

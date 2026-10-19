@@ -94,6 +94,24 @@ class SourceRuleTests(unittest.TestCase):
 
 
 class ModuleTests(unittest.TestCase):
+    def test_expired_login_sends_the_browser_back_to_sign_in(self) -> None:
+        run_node(
+            self,
+            """
+            import assert from 'node:assert/strict';
+            import { request, loadSession } from './assets/js/console/api.js';
+            const redirects = [];
+            globalThis.location = { assign: (path) => redirects.push(path) };
+            globalThis.fetch = async () => ({
+              status: 401, ok: false,
+              json: async () => ({ error: { code: 'login_required', message: 'Sign in to continue.' } }),
+            });
+            await assert.rejects(() => loadSession(), error => error.code === 'login_required');
+            await assert.rejects(() => request('GET', '/api/projects'), error => error.code === 'login_required');
+            assert.deepEqual(redirects, ['/login', '/login']);
+            """,
+        )
+
     def test_book_views_open_and_turn_the_two_page_comic(self) -> None:
         run_node(
             self,

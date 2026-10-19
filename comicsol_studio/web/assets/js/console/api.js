@@ -19,12 +19,20 @@ export class ApiError extends Error {
 let session = null;
 let sessionPromise = null;
 
+function requireLogin(response, body) {
+  if (response.status === 401 && body?.error?.code === "login_required") {
+    session = null;
+    globalThis.location.assign("/login");
+  }
+}
+
 export async function loadSession(force = false) {
   if (session && !force) return session;
   if (!sessionPromise || force) {
     sessionPromise = fetch("/api/session", { credentials: "same-origin", headers: { accept: "application/json" } })
       .then(async (response) => {
         const body = await response.json().catch(() => null);
+        requireLogin(response, body);
         if (!response.ok) throw new ApiError(response.status, body);
         session = body;
         return body;
@@ -72,6 +80,7 @@ export async function request(method, path, { body, form, revision, idempotencyK
   if (raw && response.ok) return response;
   if (response.status === 204) return null;
   const data = await response.json().catch(() => null);
+  requireLogin(response, data);
   if (!response.ok) {
     const error = new ApiError(response.status, data);
     if (error.code === "csrf_failed" && !retried) {
@@ -86,6 +95,10 @@ export async function request(method, path, { body, form, revision, idempotencyK
 const project = (id) => `/api/projects/${encodeURIComponent(id)}`;
 
 export const api = {
+  async logout() {
+    await request("POST", "/logout");
+    globalThis.location.assign("/login");
+  },
   starters: () => request("GET", "/api/starters"),
   projects: () => request("GET", "/api/projects"),
   project: (id) => request("GET", project(id)),
