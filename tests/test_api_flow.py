@@ -253,13 +253,20 @@ class ProductionFlowTests(unittest.TestCase):
         self.assertEqual(renamed.json()["revision"], current["revision"])
 
         for bad in (
+            {"starter": []},
+            {"starter": {}},
             {"title": "", "prompt": "x"},
             {"title": "T", "prompt": "x", "pageCount": 5},
             {"title": "T", "prompt": "x", "mode": "resume"},
+            {"title": "T", "prompt": "x", "mode": []},
+            {"title": "T", "prompt": "x", "mode": {}},
             {"title": "T", "prompt": "x", "extra": 1},
         ):
             with self.subTest(body=bad):
-                self.assertEqual(422, self.client.post("/api/projects", json=bad).status_code)
+                response = self.client.post("/api/projects", json=bad)
+                self.assertEqual(422, response.status_code)
+                self.assertEqual("invalid_request", response.json()["error"]["code"])
+        self.assertEqual(1, len(self.client.get("/api/projects").json()))
 
         self.assertEqual(204, self.client.delete(f"/api/projects/{project['id']}").status_code)
         self.assertEqual(404, self.client.get(f"/api/projects/{project['id']}").status_code)
