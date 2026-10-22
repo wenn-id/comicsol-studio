@@ -10,6 +10,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from comicsol_studio.errors import conflict
+
 MIGRATIONS: tuple[tuple[str, ...], ...] = (
     (
         """
@@ -177,6 +179,14 @@ class Store:
             ).fetchone()
             if active is not None:
                 return self._run(db, active["id"])
+            if kind in {"render", "render-batch"}:
+                overlap = db.execute(
+                    "SELECT 1 FROM runs WHERE project_id = ? AND kind IN ('render', 'render-batch') "
+                    "AND status IN ('queued', 'running') AND (kind = 'render-batch' OR ? = 'render-batch')",
+                    (project_id, kind),
+                ).fetchone()
+                if overlap is not None:
+                    raise conflict("render_busy", "Wait for the current renders before starting another batch or image.")
             db.execute(
                 "INSERT INTO runs (id, project_id, kind, subject, provider, status, "
                 "created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'queued', ?, ?)",

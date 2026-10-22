@@ -48,7 +48,7 @@ export function renderRender(container, ctx) {
 
   const actions = [prepare];
   for (const renderer of renderers) {
-    const all = button(`Render ${ready.length} with ${providerName(renderer.id)}`, { kind: "amber", disabled: !ready.length || batchRunning, iconName: "render" });
+    const all = button(`Render ${ready.length} with ${providerName(renderer.id)}`, { kind: "amber", disabled: !ready.length || batchRunning || busyJobs.size > 0, iconName: "render" });
     all.addEventListener("click", async () => {
       const ok = await confirmDialog({
         title: `Render ${ready.length} ${ready.length === 1 ? "image" : "images"} with ${providerName(renderer.id)}?`,
@@ -221,7 +221,7 @@ function jobActions(ctx, job, rendering, fileInput) {
   if (job.status !== "ready") return null;
   const uploadLabel = h("label", { class: "btn btn--ghost btn--small" }, fileInput, icon("upload", 16), h("span", {}, "Upload image"));
   const renders = ctx.session.providers.renderers.map((renderer) => {
-    const run = button(`Render with ${providerName(renderer.id)}`, { kind: "ghost", size: "small", disabled: rendering });
+    const run = button(`Render with ${providerName(renderer.id)}`, { kind: "ghost", size: "small", disabled: rendering || activeRuns(project).some((run) => run.kind === "render-batch") });
     run.addEventListener("click", async () => {
       const ok = await confirmDialog({
         title: `Render ${job.subjectId} with ${providerName(renderer.id)}?`,

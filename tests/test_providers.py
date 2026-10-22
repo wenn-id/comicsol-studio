@@ -6,6 +6,7 @@ import base64
 import copy
 import io
 import json
+import threading
 import time
 import unittest
 from unittest import mock
@@ -261,6 +262,41 @@ class BackgroundRunTests(unittest.TestCase):
                 self.assertEqual("failed", finished["status"])
                 self.assertIn("changed", finished["message"])
                 publish.assert_not_called()
+
+    def test_batch_and_individual_renders_cannot_overlap(self) -> None:
+        for batch_first in (False, True):
+            project = self.client.studio.create_project({"starter": "minimal-one-page"}, None)
+            project = self.client.studio.prepare(project["id"], project["revision"])
+            job = project["generation"]["jobs"][0]
+            base = f"/api/projects/{project['id']}/render"
+            paths = [f"{base}/jobs/{job['jobId']}/render", f"{base}/ready"]
+            if batch_first:
+                paths.reverse()
+            started, release = threading.Event(), threading.Event()
+            render = self.images.render
+
+            def blocked(*args, **kwargs):
+                started.set()
+                if not release.wait(30):
+                    raise AssertionError("test did not release renderer")
+                return render(*args, **kwargs)
+
+            with self.subTest(batch_first=batch_first), mock.patch.object(self.images, "render", side_effect=blocked) as draw:
+                run = self.client.post(paths[0], revision=project["revision"], json={"provider": "fake"}).json()
+                other = None
+                try:
+                    self.assertTrue(started.wait(10))
+                    repeat = self.client.post(paths[0], revision=project["revision"], json={"provider": "fake"})
+                    self.assertEqual(run["id"], repeat.json()["id"])
+                    other = self.client.post(paths[1], revision=project["revision"], json={"provider": "fake"})
+                    self.assertEqual(409, other.status_code, other.text)
+                    self.assertEqual("render_busy", other.json()["error"]["code"])
+                    self.assertEqual(1, draw.call_count)
+                finally:
+                    release.set()
+                    self.wait(project["id"], run)
+                    if other is not None and other.status_code == 202:
+                        self.wait(project["id"], other.json())
 
     def test_render_batch_reference_approval_and_ai_review(self) -> None:
         project = self.client.post("/api/projects", json={"starter": "minimal-one-page"}).json()
