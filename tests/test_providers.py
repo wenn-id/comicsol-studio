@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import base64
+import copy
 import io
 import json
 import time
 import unittest
+from unittest import mock
 from types import SimpleNamespace
 from typing import Any
 
@@ -234,6 +236,31 @@ class BackgroundRunTests(unittest.TestCase):
         providers = self.client.session["providers"]
         self.assertEqual([{"id": "fake", "model": "fake-image-1"}], providers["renderers"])
         self.assertNotIn("key", json.dumps(providers).lower())
+
+    def test_model_reviews_reject_changed_context(self) -> None:
+        project = self.client.studio.create_project({"starter": "minimal-one-page"}, None)
+        for kind, subject, field, changed in (
+            ("panel", "p01-01", "panel", {"action": "new action"}),
+            ("panel", "p01-01", "characters", [{"characterId": "ilya", "traits": ["new expectation"]}]),
+            ("panel", "p01-01", "record", {"decision": "regenerate"}),
+            ("page", 1, "balloons", [{"speaker": "new speaker"}]),
+            ("page", 1, "record", {"decision": "regenerate"}),
+        ):
+            before = {"rawSha256": "same pixels", "pageSha256": "same pixels", "record": None}
+            after = {**copy.deepcopy(before), field: changed}
+            with (
+                self.subTest(kind=kind, changed=field),
+                mock.patch.object(engine, f"{kind}_review_context", side_effect=[before, after]),
+                mock.patch.object(engine, "read_bytes", return_value=b"same pixels"),
+                mock.patch(f"comicsol_studio.service.review_{kind}", return_value=([], {})),
+                mock.patch.object(engine, f"publish_{kind}_review", return_value={"decision": "accept"}) as publish,
+            ):
+                start = getattr(self.client.studio, f"auto_review_{kind}")
+                run = start(project["id"], project["revision"], subject, "fake")
+                finished = self.wait(project["id"], run)
+                self.assertEqual("failed", finished["status"])
+                self.assertIn("changed", finished["message"])
+                publish.assert_not_called()
 
     def test_render_batch_reference_approval_and_ai_review(self) -> None:
         project = self.client.post("/api/projects", json={"starter": "minimal-one-page"}).json()

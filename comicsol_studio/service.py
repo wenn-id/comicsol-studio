@@ -882,8 +882,8 @@ class Studio:
         def work(run_id: str) -> dict[str, Any]:
             checks, assessments = review_panel(model, context, raster)
             with self._project(project_id, None) as root:
-                if engine.panel_review_context(root, panel_id)["rawSha256"] != context["rawSha256"]:
-                    raise ProviderError("The panel image changed during review; nothing was recorded.")
+                if engine.panel_review_context(root, panel_id) != context:
+                    raise ProviderError("The panel or its review context changed during review; nothing was recorded.")
                 record = engine.publish_panel_review(
                     root, panel_id, checks, assessments, method="vision-model-review", reviewer=reviewer
                 )
@@ -924,8 +924,8 @@ class Studio:
         def work(run_id: str) -> dict[str, Any]:
             checks, balloons = review_page(model, context, page)
             with self._project(project_id, None) as root:
-                if engine.read_bytes(root, f"pages/page-{number:03d}.png") != page:
-                    raise ProviderError("The page changed during review; nothing was recorded.")
+                if engine.page_review_context(root, number) != context:
+                    raise ProviderError("The page or its review context changed during review; nothing was recorded.")
                 record = engine.publish_page_review(
                     root, number, checks, balloons, method="vision-model-review", reviewer=reviewer
                 )
