@@ -94,6 +94,48 @@ class SourceRuleTests(unittest.TestCase):
 
 
 class ModuleTests(unittest.TestCase):
+    def test_segmented_keyboard_focus_survives_rerender(self) -> None:
+        run_node(
+            self,
+            """
+            import assert from 'node:assert/strict';
+            import { segmented } from './assets/js/console/ui.js';
+            let groups = [], focused;
+            globalThis.Node = class {
+                attributes = new Map(); children = []; events = {};
+                setAttribute(key, value) { this.attributes.set(key, value); }
+                addEventListener(key, callback) { this.events[key] = callback; }
+                append(child) { this.children.push(child); child.parentElement = this; }
+                querySelector() { return this.children.find(child => child.attributes.get('aria-checked') === 'true'); }
+                focus() { focused = this; }
+            };
+            globalThis.document = {
+                createElement: () => new Node(),
+                createTextNode: () => new Node(),
+                querySelectorAll: () => groups,
+            };
+            globalThis.requestAnimationFrame = callback => callback();
+            const options = [[1, '1'], [2, '2'], [3, '3']];
+            const draw = value => {
+                // Both groups deliberately have the same label.
+                groups = [segmented(1, options, () => {}, { label: 'Choice' }),
+                          segmented(value, options, draw, { label: 'Choice' })];
+            };
+            draw(1);
+            groups[1].children[0].focus();
+            for (const [key, expected] of [['ArrowRight', 2], ['ArrowDown', 3], ['ArrowRight', 1], ['ArrowLeft', 3], ['ArrowUp', 2]]) {
+                focused.events.keydown({ key, target: focused, preventDefault() {} });
+                assert.equal(focused, groups[1].children[expected - 1]);
+                assert.equal(focused.attributes.get('aria-checked'), 'true');
+                assert.equal(focused.attributes.get('tabindex'), '0');
+            }
+            draw(null);
+            groups[1].children[0].focus();
+            focused.events.keydown({ key: 'ArrowLeft', target: focused, preventDefault() {} });
+            assert.equal(focused, groups[1].children[2]);
+            """,
+        )
+
     def test_expired_login_sends_the_browser_back_to_sign_in(self) -> None:
         run_node(
             self,
