@@ -11,7 +11,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 MAX_UPLOAD_BYTES = 40 * 1024 * 1024
 MAX_PIXELS = 64_000_000
 MIN_SIDE = 512
-ACCEPTED_FORMATS = frozenset({"PNG", "JPEG", "WEBP"})
+ACCEPTED_FORMATS = ("PNG", "JPEG", "WEBP")
 
 
 class RasterError(ValueError):
@@ -42,9 +42,7 @@ def conform(payload: bytes, *, width: int, height: int, exact: bool) -> Conforme
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(io.BytesIO(payload)) as opened:
-                if opened.format not in ACCEPTED_FORMATS:
-                    raise RasterError("Use a PNG, JPEG, or WebP image.")
+            with Image.open(io.BytesIO(payload), formats=ACCEPTED_FORMATS) as opened:
                 if opened.width * opened.height > MAX_PIXELS:
                     raise RasterError("The image has too many pixels.")
                 image = ImageOps.exif_transpose(opened)

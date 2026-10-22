@@ -10,11 +10,11 @@ requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "Alwan Juliawan" }]
 dependencies = [
-    "comic-sol @ git+https://github.com/wenn-id/comicsol@7c0138df6030c4c4105533d05ed43affb33bad2d",
+    "comic-sol @ git+https://github.com/wenn-id/comicsol@ff8f138",
     "anthropic==1.12.1",
     "fastapi==0.141.1",
     "httpx==0.28.1",
-    "pillow==12.3.0",
+    "pillow==13.0.0",
     "python-multipart==0.0.32",
     "starlette==1.6.0",
     "uvicorn==0.35.0",
