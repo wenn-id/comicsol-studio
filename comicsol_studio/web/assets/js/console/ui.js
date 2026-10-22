@@ -145,10 +145,12 @@ export function segmented(value, options, onChange, { label } = {}) {
             const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
             if (!(event.key in keys)) return;
             event.preventDefault();
-            const index = options.findIndex(([v]) => v === value);
+            const index = options.findIndex(([v]) => v === optionValue);
             const next = options[(index + keys[event.key] + options.length) % options.length][0];
+            // Selection rerenders the group, so find its replacement before restoring focus.
+            const groupIndex = [...document.querySelectorAll('[role="radiogroup"]')].indexOf(event.target.parentElement);
             onChange(next);
-            requestAnimationFrame(() => event.target.parentElement?.querySelector('[aria-checked="true"]')?.focus());
+            requestAnimationFrame(() => document.querySelectorAll('[role="radiogroup"]')[groupIndex]?.querySelector('[aria-checked="true"]')?.focus());
           },
           tabindex: optionValue === value || (value == null && optionValue === options[0][0]) ? "0" : "-1",
         },
