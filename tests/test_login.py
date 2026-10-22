@@ -149,6 +149,21 @@ class LoginTests(unittest.TestCase):
 
 
 class LoginSetupTests(unittest.TestCase):
+    def test_first_credentials_protect_an_already_running_local_app(self):
+        with tempfile.TemporaryDirectory() as root:
+            app = create_app(StudioConfig(data_root=Path(root)))
+            with TestClient(app, base_url="http://127.0.0.1:8766", follow_redirects=False) as client:
+                self.assertEqual(200, client.get("/api/session").status_code)
+                login = Login(Path(root))
+                login.set_credentials("owner", PASSWORD)
+                for path in ("/api/session", "/api/projects", "/api/projects/x/files/page.png"):
+                    self.assertEqual(401, client.get(path).status_code)
+                self.assertEqual("/login", client.get("/studio/").headers["location"])
+                client.cookies.set(AUTH_COOKIE, login.authenticate("owner", PASSWORD))
+                self.assertEqual(200, client.get("/api/session").status_code)
+                login.set_credentials("owner", "new-password-456")
+                self.assertEqual(401, client.get("/api/session").status_code)
+
     def test_public_origin_fails_closed_without_credentials(self):
         with tempfile.TemporaryDirectory() as root, self.assertRaises(ConfigError):
             create_app(StudioConfig(data_root=Path(root), public_origin=ORIGIN))
