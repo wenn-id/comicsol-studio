@@ -603,12 +603,8 @@ class Studio:
                     )
 
             documents, issues = draft_plan(request, model.complete_json, on_round=progress)
-            if issues:
-                raise ProviderError(
-                    f"The draft still had {len(issues)} validation issues after repair. "
-                    "Open it to fix them by hand."
-                )
-            self.store.add_event(project_id, "plan.drafted", f"{provider_id} drafted a plan for review.")
+            note = f" with {len(issues)} issues to fix" if issues else ""
+            self.store.add_event(project_id, "plan.drafted", f"{provider_id} drafted a plan for review{note}.")
             return {"documents": documents, "issues": issues}
 
         return self._submit(project_id, "plan-draft", "plan", provider_id, work)

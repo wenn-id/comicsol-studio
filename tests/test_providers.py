@@ -388,6 +388,19 @@ class BackgroundRunTests(unittest.TestCase):
         # A draft is not saved until the creator saves it.
         self.assertIsNone(self.project(project["id"])["plan"]["storyboard"])
 
+    def test_plan_draft_keeps_documents_after_failed_repairs(self) -> None:
+        project = self.client.studio.create_project({"title": "Trains", "prompt": "Two friends meet.", "pageCount": 2}, None)
+        bad = draft_from(starter_documents())
+        bad["storyPlan"]["scenes"] = bad["storyPlan"]["scenes"][:1]
+        self.text.responses.extend(copy.deepcopy(bad) for _ in range(3))
+        run = self.client.studio.start_plan_draft(project["id"], project["revision"], "fake")
+        finished = self.wait(project["id"], run)
+        self.assertEqual("succeeded", finished["status"])
+        self.assertEqual(3, len(self.text.prompts))
+        self.assertTrue(finished["result"]["issues"])
+        self.assertEqual(bad["storyPlan"]["scenes"], finished["result"]["documents"]["storyPlan"]["scenes"])
+        self.assertIsNone(self.project(project["id"])["plan"]["storyboard"])
+
     def test_unknown_provider_is_refused(self) -> None:
         project = self.client.post("/api/projects", json={"starter": "minimal-one-page"}).json()
         response = self.client.post(
