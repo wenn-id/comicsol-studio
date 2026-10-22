@@ -64,6 +64,8 @@ def conform(payload: bytes, *, width: int, height: int, exact: bool) -> Conforme
 
     cropped = False
     if exact:
+        if width * height > MAX_PIXELS:
+            raise RasterError("The resized image has too many pixels.")
         target_ratio = width / height
         ratio = image.width / image.height
         if abs(ratio - target_ratio) > 1e-6:
@@ -80,10 +82,10 @@ def conform(payload: bytes, *, width: int, height: int, exact: bool) -> Conforme
             image = image.resize((width, height), Image.Resampling.LANCZOS)
     elif min(image.size) < MIN_SIDE:
         scale = MIN_SIDE / min(image.size)
-        image = image.resize(
-            (max(MIN_SIDE, round(image.width * scale)), max(MIN_SIDE, round(image.height * scale))),
-            Image.Resampling.LANCZOS,
-        )
+        size = (max(MIN_SIDE, round(image.width * scale)), max(MIN_SIDE, round(image.height * scale)))
+        if size[0] * size[1] > MAX_PIXELS:
+            raise RasterError("The resized image has too many pixels.")
+        image = image.resize(size, Image.Resampling.LANCZOS)
 
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=False)
