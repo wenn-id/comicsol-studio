@@ -243,6 +243,14 @@ class ProductionFlowTests(unittest.TestCase):
             f"/api/projects/{project['id']}", revision=project["revision"], json={"title": "Kite Season"}
         )
         self.assertEqual("Kite Season", renamed.json()["title"])
+        self.assertEqual(project["revision"] + 1, renamed.json()["revision"])
+        stale = self.client.patch(
+            f"/api/projects/{project['id']}", revision=project["revision"], json={"title": "Old tab"}
+        )
+        self.assertEqual(409, stale.status_code)
+        current = self.client.get(f"/api/projects/{project['id']}").json()
+        self.assertEqual("Kite Season", current["title"])
+        self.assertEqual(renamed.json()["revision"], current["revision"])
 
         for bad in (
             {"title": "", "prompt": "x"},

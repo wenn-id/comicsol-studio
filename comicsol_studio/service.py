@@ -367,7 +367,7 @@ class Studio:
         with self._project(project_id, revision):
             with self.store.transaction() as db:
                 db.execute(
-                    "UPDATE projects SET title = ?, updated_at = ? WHERE id = ?",
+                    "UPDATE projects SET title = ?, revision = revision + 1, updated_at = ? WHERE id = ?",
                     (title.strip(), _now(), project_id),
                 )
         return self.project(project_id)
