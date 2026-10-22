@@ -95,6 +95,17 @@ class PagesTests(unittest.TestCase):
 
 
 class RasterTests(unittest.TestCase):
+    def test_output_pixel_limit_is_checked_before_resizing(self) -> None:
+        for source, target, exact in (((1, 4096), (1024, 1024), False),
+                                      ((4096, 1), (1024, 1024), False),
+                                      ((10, 10), (10000, 10000), True)):
+            buffer = io.BytesIO()
+            Image.new("RGB", source).save(buffer, format="PNG")
+            with self.subTest(source=source, exact=exact):
+                with mock.patch.object(Image.Image, "resize", side_effect=AssertionError("oversized allocation")):
+                    with self.assertRaisesRegex(rasters.RasterError, "too many pixels"):
+                        rasters.conform(buffer.getvalue(), width=target[0], height=target[1], exact=exact)
+
     def test_unsupported_formats_are_not_parsed(self) -> None:
         with mock.patch.object(XbmImagePlugin.XbmImageFile, "_open", side_effect=AssertionError("XBM parser ran")):
             with self.assertRaises(rasters.RasterError):
