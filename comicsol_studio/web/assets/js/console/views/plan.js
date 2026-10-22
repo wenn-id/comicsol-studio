@@ -343,10 +343,13 @@ function plannerBar(ctx, draft) {
 function draftBanner(ctx, draft, rerender, validate) {
   const run = (ctx.project.runs || []).find((item) => item.kind === "plan-draft" && item.status === "succeeded" && item.result?.documents);
   if (!run || draft.loadedRun === run.id || draft.dismissedRun === run.id) return null;
+  const issues = run.result.issues || [];
   return h(
     "div",
     { class: "banner banner--amber", role: "status" },
-    h("p", {}, `${providerName(run.provider)} drafted a plan that passes the engine's validation. Load it into the editor to review and save it.`),
+    h("p", {}, issues.length
+      ? `${providerName(run.provider)} drafted a plan with ${issues.length} ${issues.length === 1 ? "issue" : "issues"} to fix. Load it into the editor to review and edit it.`
+      : `${providerName(run.provider)} drafted a plan that passes the engine's validation. Load it into the editor to review and save it.`),
     h(
       "div",
       { class: "banner__actions" },
@@ -360,7 +363,7 @@ function draftBanner(ctx, draft, rerender, validate) {
           }
           draft.plan = normalizePlan(clone(run.result.documents), ctx.session.layouts);
           draft.loadedRun = run.id;
-          draft.issues = null;
+          draft.issues = [...issues];
           draft.tab = "story";
           rerender();
           validate();
