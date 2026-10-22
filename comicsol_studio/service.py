@@ -246,7 +246,7 @@ class Studio:
             if set(payload) - {"starter"}:
                 raise invalid("A starter project takes no other fields.")
             ids = {entry["id"] for entry in engine.starters()}
-            if starter not in ids:
+            if not isinstance(starter, str) or starter not in ids:
                 raise invalid("That starter is not in the engine catalog.")
             title = next(entry["title"] for entry in engine.starters() if entry["id"] == starter)
             return self._create(
@@ -271,7 +271,7 @@ class Studio:
             raise invalid("The story is longer than the engine's 200 KB source limit.")
         if not isinstance(language, str) or not language.strip() or len(language) > LANGUAGE_MAX:
             raise invalid("Choose a language tag such as en or id.")
-        if mode not in {"short_prompt", "pasted_story"}:
+        if not isinstance(mode, str) or mode not in {"short_prompt", "pasted_story"}:
             raise invalid("Mode must be a short prompt or a pasted story.")
         if isinstance(page_count, bool) or not isinstance(page_count, int) or not 1 <= page_count <= 4:
             raise invalid("A comic has 1 to 4 pages.")
