@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from PIL import Image
+from PIL import Image, XbmImagePlugin
 
 from comicsol_studio import __main__ as launcher
 from comicsol_studio import rasters
@@ -95,6 +95,11 @@ class PagesTests(unittest.TestCase):
 
 
 class RasterTests(unittest.TestCase):
+    def test_unsupported_formats_are_not_parsed(self) -> None:
+        with mock.patch.object(XbmImagePlugin.XbmImageFile, "_open", side_effect=AssertionError("XBM parser ran")):
+            with self.assertRaises(rasters.RasterError):
+                rasters.conform(b"#define image_width 1\n", width=512, height=512, exact=True)
+
     def test_exact_jobs_are_cropped_and_resized(self) -> None:
         result = rasters.conform(png_bytes(2000, 1000), width=736, height=1120, exact=True)
         self.assertTrue(result.cropped)

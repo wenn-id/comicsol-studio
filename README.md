@@ -25,7 +25,7 @@ python -m venv .venv
 ```
 
 On Windows use `.venv\Scripts\python.exe`. `pip install` pulls the engine from
-`wenn-id/comicsol` at the commit pinned in `pyproject.toml` (`7c0138d`, engine
+`wenn-id/comicsol` at the commit pinned in `pyproject.toml` (`ff8f138`, engine
 `2.0.0rc6`). After installing, `comicsol-studio` is also on the path.
 
 Open `http://127.0.0.1:8766/` for the landing page or `http://127.0.0.1:8766/studio/` for
