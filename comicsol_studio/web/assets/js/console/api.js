@@ -44,10 +44,6 @@ export async function loadSession(force = false) {
   return sessionPromise;
 }
 
-export function currentSession() {
-  return session;
-}
-
 export function newIdempotencyKey() {
   if (crypto.randomUUID) return crypto.randomUUID();
   const bytes = crypto.getRandomValues(new Uint8Array(16));

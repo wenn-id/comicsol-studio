@@ -999,7 +999,3 @@ function jsonEditor({ draft, structural }) {
     ),
   );
 }
-
-export function forgetPlanDraft(projectId) {
-  drafts.delete(projectId);
-}
