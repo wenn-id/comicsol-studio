@@ -21,7 +21,7 @@ import importlib
 import json
 import os
 import stat
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import cache
@@ -1035,14 +1035,3 @@ def engine_events(root: Path, limit: int = 200) -> list[dict[str, Any]]:
         except ValueError:
             continue
     return events
-
-
-def project_files(root: Path, prefixes: Iterable[str]) -> list[str]:
-    found = []
-    for prefix in prefixes:
-        base = root / prefix
-        if base.is_dir():
-            found.extend(
-                path.relative_to(root).as_posix() for path in sorted(base.rglob("*")) if path.is_file()
-            )
-    return found

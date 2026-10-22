@@ -207,10 +207,6 @@ export function removePage(plan, pageIndex, layouts) {
   return normalizePlan(next, layouts);
 }
 
-export function panelCount(plan) {
-  return (plan?.storyboard?.pages || []).reduce((sum, page) => sum + (page.panels || []).length, 0);
-}
-
 export function allPanels(plan) {
   return (plan?.storyboard?.pages || []).flatMap((page) => page.panels || []);
 }
@@ -336,15 +332,6 @@ export function parseIssue(issue) {
     }
   }
   return { doc: "other", path: location, message, text, pageIndex: null, panelIndex: null, characterIndex: null, sceneIndex: null, field: "" };
-}
-
-export function groupIssues(issues) {
-  const groups = { story: [], cast: [], storyboard: [], other: [] };
-  for (const issue of issues || []) {
-    const parsed = parseIssue(issue);
-    groups[parsed.doc].push(parsed);
-  }
-  return groups;
 }
 
 export function issuesFor(issues, predicate) {
