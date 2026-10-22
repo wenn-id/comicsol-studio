@@ -141,7 +141,7 @@ class LoginGuard:
             await self.app(scope, receive, send)
             return
         path = scope["path"]
-        protected = path in {"/studio", "/api", "/logout"} or path.startswith(("/studio/", "/api/"))
+        protected = (path in {"/studio", "/api", "/logout"} or path.startswith(("/studio/", "/api/"))) and self.login.enabled
         if protected:
             request = Request(scope)
             if not self.login.valid(request.cookies.get(AUTH_COOKIE, "")):

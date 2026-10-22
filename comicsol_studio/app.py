@@ -171,7 +171,6 @@ def create_app(config: StudioConfig, *, providers: Providers | None = None) -> F
         return response
 
     app.mount("/assets", RevalidatedStaticFiles(directory=str(WEB_DIR / "assets")), name="assets")
-    if login.enabled:
-        app.add_middleware(LoginGuard, login=login)
+    app.add_middleware(LoginGuard, login=login)
     app.add_middleware(HostGuard, allowed_hosts=config.allowed_hosts())
     return app
