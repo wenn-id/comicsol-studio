@@ -309,6 +309,9 @@ class ModuleTests(unittest.TestCase):
             paper.reset();
             assert.equal(paper.intactSeamCount, COLS);
             assert.ok(!paper.detached);
+            // Studio timestamps are Unix seconds; the card's bind date must not read 1970.
+            const { formatDate } = await import('./assets/js/console/edition/textures.js');
+            assert.match(formatDate(1792756800), /OCT 2026$/);
             // No triangle crosses the seam: 24 cover rows, then 10 stub rows, of 24 quads.
             assert.equal(paper.bodyIndexCount, 24 * 24 * 6);
             assert.equal(paper.index.length, 34 * 24 * 6);

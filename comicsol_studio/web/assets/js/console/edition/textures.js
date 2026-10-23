@@ -9,12 +9,15 @@ const HOLE_COUNT = 24;
 
 const SANS = '"Manrope", "Segoe UI", system-ui, sans-serif';
 
-const PAPER = "#0c0d10";
-const IVORY = "#eee7d8";
-const IVORY_2 = "#bdb6a8";
-const IVORY_3 = "#8f897e";
-const AMBER = "#d9a441";
-const LINE = "rgba(217, 164, 65, 0.7)";
+// Main's print palette: card stock a shade brighter than the page, charcoal ink, print red.
+const PAPER = "#fdfbf6";
+const INK = "#25282b";
+const INK_2 = "#454747";
+const INK_3 = "#64615b";
+const RED = "#b43928";
+const ON_RED = "#ffffff";
+const LINE = "rgba(180, 57, 40, 0.75)";
+const RULE = "rgba(37, 40, 43, 0.14)";
 
 function hash(text) {
   let h = 2166136261;
@@ -90,14 +93,14 @@ function titleLines(title) {
 
 function foilGradient(ctx, x0, x1) {
   const g = ctx.createLinearGradient(x0, 0, x1, 0);
-  ["#8a6a2a", "#f2d488", "#b8893a", "#fff0b8", "#9c7631"].forEach((c, i, all) => g.addColorStop(i / (all.length - 1), c));
+  ["#7d2418", "#d4563f", "#9e2c1d", "#e8806a", "#873021"].forEach((c, i, all) => g.addColorStop(i / (all.length - 1), c));
   return g;
 }
 
 function cutShape(ctx) {
   ctx.save();
   ctx.globalCompositeOperation = "destination-in";
-  roundRect(ctx, 0, 0, TEX_W, TEX_H, 40);
+  roundRect(ctx, 0, 0, TEX_W, TEX_H, 20);
   ctx.fillStyle = "#fff";
   ctx.fill();
   ctx.globalCompositeOperation = "destination-out";
@@ -128,7 +131,7 @@ function perforation(ctx, fill) {
 function frame(ctx, fill) {
   ctx.strokeStyle = fill;
   ctx.lineWidth = 3;
-  roundRect(ctx, 30, 30, TEX_W - 60, TEX_H - 60, 24);
+  roundRect(ctx, 30, 30, TEX_W - 60, TEX_H - 60, 8);
   ctx.stroke();
 }
 
@@ -154,7 +157,8 @@ function drawCover(ctx, image, x, y, w, h) {
 }
 
 // Each op is drawn three times: in colour, then into the foil and emboss layers if it has
-// a weight there. Layers get flat grays so the shader can read them as masks.
+// a weight there. Layers get flat grays so the shader can read them as masks. A knockout
+// op clears the foil under it, so lettering printed on a foil block stays readable.
 function paint(ops) {
   const color = canvas();
   const cctx = color.getContext("2d");
@@ -173,6 +177,7 @@ function paint(ops) {
   }
   for (const op of ops) {
     if (op.foil) op.draw(fctx, gray(op.foil), "foil");
+    if (op.knockout) op.draw(fctx, "#000", "foil");
     if (op.emboss) op.draw(ectx, gray(op.emboss), "emboss");
   }
   // Soften the emboss so the shader's finite differences give a rounded bevel.
@@ -200,8 +205,9 @@ function paint(ops) {
   return { color, mask };
 }
 
-export function formatDate(iso) {
-  const date = iso ? new Date(iso) : new Date();
+// Studio timestamps are Unix seconds.
+export function formatDate(seconds) {
+  const date = typeof seconds === "number" ? new Date(seconds * 1000) : new Date();
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
 }
@@ -222,7 +228,7 @@ export function drawFront(edition) {
 
   op({ color: LINE, foil: 0.9, draw: (c, fill) => frame(c, fill) });
   op({
-    color: AMBER,
+    color: RED,
     foil: 1,
     draw: (c, fill, layer) => {
       c.fillStyle = layer === "color" ? foilGradient(c, 50, W - 50) : fill;
@@ -230,7 +236,8 @@ export function drawFront(edition) {
     },
   });
   op({
-    color: "#15110a",
+    color: ON_RED,
+    knockout: true,
     emboss: 0.6,
     draw: (c, fill) => text(c, "FIRST EDITION · COMIC SOL STUDIO", W / 2, 84, `700 21px ${SANS}`, fill, "center", 5),
   });
@@ -238,19 +245,19 @@ export function drawFront(edition) {
   // The cover art is page one of the comic.
   const art = { x: 64, y: 130, w: W - 128, h: 760 };
   op({
-    color: "#16181d",
+    color: "#e5dfd4",
     draw: (c, fill, layer) => {
       if (layer !== "color") return;
       if (edition.cover) drawCover(c, edition.cover, art.x, art.y, art.w, art.h);
       else {
         c.fillStyle = fill;
         c.fillRect(art.x, art.y, art.w, art.h);
-        text(c, "PAGE ONE", W / 2, art.y + art.h / 2, `800 56px ${SANS}`, IVORY_3, "center", 6);
+        text(c, "PAGE ONE", W / 2, art.y + art.h / 2, `800 56px ${SANS}`, INK_3, "center", 6);
       }
     },
   });
   op({
-    color: AMBER,
+    color: RED,
     foil: 1,
     emboss: 0.8,
     draw: (c, fill) => {
@@ -262,45 +269,44 @@ export function drawFront(edition) {
 
   const lines = titleLines(edition.title);
   op({
-    color: IVORY,
+    color: INK,
     emboss: 1,
-    foil: 0.18,
     draw: (c, fill) => {
       const size = Math.min(...lines.map((line) => fitted(c, line, 800, lines.length === 1 ? 88 : 70, W - 140)));
       lines.forEach((line, i) => text(c, line, W / 2, 990 + i * size * 1.02 + (lines.length === 1 ? 20 : 0), `800 ${size}px ${SANS}`, fill, "center", -1));
     },
   });
   op({
-    color: IVORY_2,
+    color: INK_2,
     draw: (c, fill) =>
       text(c, `${edition.pages} ${edition.pages === 1 ? "PAGE" : "PAGES"} · ${edition.panels} PANELS · BOUND ${edition.bound}`, W / 2, 1168, `700 20px ${SANS}`, fill, "center", 3),
   });
   op({
-    color: IVORY_3,
+    color: INK_3,
     draw: (c, fill) => text(c, "SLICE THE PERFORATION OR PULL THE STUB TO RELEASE THE PDF", W / 2, SEAM_PX - 24, `600 15px ${SANS}`, fill, "center", 2),
   });
   op({ color: LINE, foil: 0.5, draw: (c, fill) => perforation(c, fill) });
 
   // Stub
   const sy = SEAM_PX + 40;
-  op({ color: IVORY_3, draw: (c, fill) => text(c, "READER'S STUB · ADMIT ONE", 70, sy + 40, `700 17px ${SANS}`, fill, "left", 3) });
+  op({ color: INK_3, draw: (c, fill) => text(c, "READER'S STUB · ADMIT ONE", 70, sy + 40, `700 17px ${SANS}`, fill, "left", 3) });
   op({
-    color: AMBER,
+    color: RED,
     foil: 0.9,
     emboss: 1,
     draw: (c, fill, layer) => text(c, "EDITION 001 / 001", 70, sy + 116, `800 60px ${SANS}`, layer === "color" ? foilGradient(c, 70, 640) : fill, "left", 1),
   });
   op({
-    color: IVORY_2,
+    color: INK_2,
     draw: (c, fill) => {
       const size = fitted(c, edition.title.toUpperCase(), 700, 20, 560);
       text(c, edition.title.toUpperCase(), 70, sy + 162, `700 ${size}px ${SANS}`, fill, "left", 2);
     },
   });
-  op({ color: IVORY, foil: 0.25, draw: (c, fill) => barcode(c, 70, sy + 190, 600, 110, edition.serial, fill) });
-  op({ color: IVORY_3, draw: (c, fill) => text(c, `SERIAL CS-${edition.serial.slice(0, 12).toUpperCase()}`, 70, sy + 330, `600 16px ${SANS}`, fill, "left", 2) });
+  op({ color: INK, draw: (c, fill) => barcode(c, 70, sy + 190, 600, 110, edition.serial, fill) });
+  op({ color: INK_3, draw: (c, fill) => text(c, `SERIAL CS-${edition.serial.slice(0, 12).toUpperCase()}`, 70, sy + 330, `600 16px ${SANS}`, fill, "left", 2) });
   op({
-    color: AMBER,
+    color: RED,
     foil: 1,
     emboss: 0.9,
     draw: (c, fill, layer) => {
@@ -311,7 +317,8 @@ export function drawFront(edition) {
     },
   });
   op({
-    color: "#15110a",
+    color: ON_RED,
+    knockout: true,
     emboss: 0.3,
     draw: (c, fill) => {
       text(c, "PDF", 860, sy + 176, `800 46px ${SANS}`, fill, "center", 4);
@@ -319,7 +326,7 @@ export function drawFront(edition) {
     },
   });
   op({
-    color: AMBER,
+    color: RED,
     foil: 1,
     draw: (c, fill, layer) => {
       c.fillStyle = layer === "color" ? foilGradient(c, W - 50, 50) : fill;
@@ -327,7 +334,8 @@ export function drawFront(edition) {
     },
   });
   op({
-    color: "#15110a",
+    color: ON_RED,
+    knockout: true,
     draw: (c, fill) => text(c, "TEAR HERE TO RELEASE THE PDF · KEEP THE COVER", W / 2, TEX_H - 77, `700 17px ${SANS}`, fill, "center", 3),
   });
   return paint(ops);
@@ -339,9 +347,9 @@ export function drawBack(edition) {
   const op = (entry) => ops.push(entry);
 
   op({ color: LINE, foil: 0.8, draw: (c, fill) => frame(c, fill) });
-  op({ color: IVORY_3, draw: (c, fill) => text(c, "COLOPHON", W / 2, 120, `700 20px ${SANS}`, fill, "center", 6) });
+  op({ color: INK_3, draw: (c, fill) => text(c, "COLOPHON", W / 2, 120, `700 20px ${SANS}`, fill, "center", 6) });
   op({
-    color: IVORY,
+    color: INK,
     emboss: 0.8,
     draw: (c, fill) => {
       const size = fitted(c, edition.title, 800, 76, W - 160);
@@ -367,16 +375,16 @@ export function drawBack(edition) {
   ];
   rows.forEach(([key, value], i) => {
     const y = 380 + i * 92;
-    op({ color: IVORY_3, draw: (c, fill) => text(c, key.toUpperCase(), 110, y, `700 20px ${SANS}`, fill, "left", 3) });
+    op({ color: INK_3, draw: (c, fill) => text(c, key.toUpperCase(), 110, y, `700 20px ${SANS}`, fill, "left", 3) });
     op({
-      color: IVORY,
+      color: INK,
       draw: (c, fill) => {
         const size = fitted(c, value, 600, 34, 480);
         text(c, value, W - 110, y, `600 ${size}px ${SANS}`, fill, "right");
       },
     });
     op({
-      color: "rgba(238, 231, 216, 0.12)",
+      color: RULE,
       draw: (c, fill) => {
         c.fillStyle = fill;
         c.fillRect(110, y + 30, W - 220, 2);
@@ -388,13 +396,13 @@ export function drawBack(edition) {
   const sx = W / 2;
   const sy = SEAM_PX + 245;
   op({
-    color: AMBER,
+    color: RED,
     foil: 1,
     emboss: 0.9,
     draw: (c, fill, layer) => {
       if (layer === "color") {
         const g = c.createRadialGradient(sx - 50, sy - 50, 10, sx, sy, 150);
-        ["#fff1b5", "#e0b451", "#8a6424"].forEach((stop, i) => g.addColorStop(i / 2, stop));
+        ["#e8806a", "#b43928", "#6e1f14"].forEach((stop, i) => g.addColorStop(i / 2, stop));
         c.fillStyle = g;
       } else c.fillStyle = fill;
       c.beginPath();
@@ -403,13 +411,14 @@ export function drawBack(edition) {
     },
   });
   op({
-    color: "#15110a",
+    color: ON_RED,
+    knockout: true,
     emboss: 0.3,
     draw: (c, fill) => {
       text(c, "BOUND", sx, sy - 6, `800 30px ${SANS}`, fill, "center", 4);
       text(c, "AND VERIFIED", sx, sy + 28, `800 22px ${SANS}`, fill, "center", 3);
     },
   });
-  op({ color: IVORY_3, draw: (c, fill) => text(c, "MADE WITH COMIC SOL STUDIO", W / 2, TEX_H - 82, `700 15px ${SANS}`, fill, "center", 3) });
+  op({ color: INK_3, draw: (c, fill) => text(c, "MADE WITH COMIC SOL STUDIO", W / 2, TEX_H - 82, `700 15px ${SANS}`, fill, "center", 3) });
   return paint(ops);
 }

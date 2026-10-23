@@ -1,4 +1,4 @@
-// Amber foil for the first-edition card: a thin-film sweep from a cosine palette, Voronoi
+// Print-red foil for the first-edition card: a thin-film sweep from a cosine palette, Voronoi
 // glitter flakes that flash when they face the light, letterpress emboss from the mask's
 // green channel, and the punched holes cut out with discard. Normals come from the
 // deformed mesh every frame, so the foil follows the bend.
@@ -35,7 +35,9 @@ const fragmentShader = /* glsl */ `
   const float TAU = 6.28318530718;
 
   vec3 palette(float t) {
-    return vec3(0.78, 0.6, 0.3) + vec3(0.3, 0.26, 0.2) * cos(TAU * (vec3(1.0, 1.0, 0.8) * t + vec3(0.0, 0.08, 0.22)));
+    // A narrow sweep around print red #B43928 (linear 0.46, 0.04, 0.02), from oxblood to a
+    // warm vermilion highlight. Values are linear: the output pass converts them to sRGB.
+    return vec3(0.42, 0.045, 0.022) + vec3(0.16, 0.035, 0.015) * cos(TAU * (vec3(1.0, 1.0, 0.9) * t + vec3(0.0, 0.1, 0.18)));
   }
 
   vec2 hash2(vec2 p) {
@@ -82,8 +84,9 @@ const fragmentShader = /* glsl */ `
     vec3 H = normalize(L + V);
     float diff = max(dot(Np, L), 0.0);
     float fill = max(dot(Np, normalize(uFillDir)), 0.0);
-    vec3 paper = base.rgb * (0.66 + diff * 0.3 + fill * 0.1);
-    float sheen = pow(max(dot(Np, H), 0.0), 40.0) * 0.06;
+    // Card stock is light: keep it near its printed value so it reads as paper, not grey.
+    vec3 paper = base.rgb * (0.84 + diff * 0.18 + fill * 0.05);
+    float sheen = pow(max(dot(Np, H), 0.0), 40.0) * 0.04;
 
     float foil = mask.r;
     float ndv = dot(Np, V);
@@ -91,9 +94,9 @@ const fragmentShader = /* glsl */ `
     vec3 rainbow = palette(t);
     float spec = pow(max(dot(Np, H), 0.0), 18.0);
     float fres = pow(1.0 - max(ndv, 0.0), 2.0);
-    vec3 foilCol = mix(vec3(0.95, 0.8, 0.48) * (0.55 + diff * 0.5), rainbow, 0.72) * (0.78 + spec * 0.9 + fres * 0.6);
+    vec3 foilCol = mix(vec3(0.46, 0.04, 0.021) * (0.7 + diff * 0.4), rainbow, 0.7) * (0.85 + spec * 0.9 + fres * 0.2);
     vec3 col = mix(paper, foilCol, foil * 0.9);
-    col += glitter(uv, Np, V, L) * foil * 1.3 * mix(vec3(1.0), rainbow, 0.4);
+    col += glitter(uv, Np, V, L) * foil * 0.9 * mix(vec3(1.0, 0.86, 0.8), rainbow, 0.4);
     col += sheen + spec * foil * 0.25;
 
     gl_FragColor = vec4(col, 1.0);
