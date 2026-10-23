@@ -7,6 +7,10 @@ import { h, icon, mount } from "../dom.js";
 import { busy, button, emptyState, toast, toastError } from "../ui.js";
 
 const readers = new Map();
+const FIBERS = 25;
+// One live first-edition card at a time; the view re-renders on every project update,
+// so the card (and its torn state) is kept and re-attached rather than rebuilt.
+let edition = null;
 
 export function renderFinish(container, ctx) {
   const project = ctx.project;
@@ -64,6 +68,7 @@ export function renderFinish(container, ctx) {
           project.exports.report ? h("a", { class: "btn btn--ghost", href: project.exports.report, target: "_blank", rel: "noopener" }, "QA report") : null,
         ),
       ),
+      finished && project.exports.pdf ? firstEdition(project) : null,
       composed ? reader(ctx) : emptyState("No composed pages yet.", "Pages appear here after the engine letters and composes them on the Review stage."),
       h(
         "section",
@@ -124,4 +129,169 @@ function reader(ctx) {
   );
   draw();
   return element;
+}
+
+// The first edition: a foil card printed with page one and the colophon, whose perforated
+// stub holds the PDF. Tearing the stub off (by slicing the seam, pulling the stub, or the
+// button) downloads the PDF. Without WebGL the card is a flat print and the button
+// downloads directly.
+function firstEdition(project) {
+  const key = `${project.id}:${project.exports.pdf}`;
+  if (edition?.key === key) {
+    edition.controller?.wake();
+    return edition.section;
+  }
+  edition?.controller?.dispose();
+  edition = { key, controller: null, section: null };
+  const current = edition;
+
+  const pdf = project.exports.pdf;
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fibers = Array.from({ length: FIBERS }, () => h("span", { class: "edition__fiber" }));
+  const meter = h("p", { class: "edition__meter", role: "status" }, `0 of ${FIBERS} fibres torn`);
+  const detail = h("p", { class: "next__detail" }, "Tear the stub off to release the PDF. Slice across the perforation, pull the stub down, or use the button.");
+  const stage = h("div", { class: "edition__frame" }, h("div", { class: "state state--loading", role: "status" }, h("span", { class: "spinner", "aria-hidden": "true" }), h("p", {}, "Printing the first edition…")));
+  const face = h("p", { class: "edition__face" }, "Front · page one");
+
+  const tear = button("Tear the stub", { kind: "amber" });
+  const flip = button("Flip the card", { kind: "ghost" });
+  const fresh = button("Print a fresh copy", { kind: "ghost" });
+  const sound = button("Sound on", { kind: "ghost", size: "small" });
+  fresh.hidden = true;
+
+  const showSevered = (intact) => {
+    fibers.forEach((fiber, i) => fiber.classList.toggle("is-torn", !intact[i]));
+    const severed = intact.filter((holds) => !holds).length;
+    meter.textContent = severed >= FIBERS ? "Stub released" : `${severed} of ${FIBERS} fibres torn`;
+  };
+
+  const release = () => {
+    const link = h("a", { href: `${pdf}&download=1`, download: true });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    detail.textContent = "Released. The PDF is downloading, and the cover is yours to keep.";
+    tear.hidden = true;
+    fresh.hidden = false;
+    current.section.classList.add("is-released");
+    toast("First edition released.", { tone: "success", detail: "The PDF is downloading." });
+  };
+
+  current.section = h(
+    "section",
+    { class: "edition", "aria-labelledby": "edition-title" },
+    h(
+      "div",
+      { class: "edition__copy" },
+      h("p", { class: "next__label" }, "First edition"),
+      h("h2", { class: "next__title", id: "edition-title" }, "Tear it to release it"),
+      detail,
+      h("div", { class: "edition__fibers", "aria-hidden": "true" }, fibers),
+      meter,
+      h("div", { class: "button-row" }, tear, fresh, flip),
+      h("div", { class: "edition__meta" }, face, sound),
+    ),
+    stage,
+  );
+
+  const webgl = (() => {
+    try {
+      const probe = document.createElement("canvas");
+      return Boolean(probe.getContext("webgl2") || probe.getContext("webgl"));
+    } catch {
+      return false;
+    }
+  })();
+
+  (async () => {
+    const [{ drawFront, formatDate }, { TearSound }] = await Promise.all([import("../edition/textures.js"), import("../edition/sound.js")]);
+    const tearSound = new TearSound();
+    const paintSound = () => {
+      sound.querySelector("span").textContent = tearSound.enabled ? "Sound on" : "Sound off";
+      sound.setAttribute("aria-pressed", String(tearSound.enabled));
+    };
+    paintSound();
+    sound.addEventListener("click", () => {
+      tearSound.setEnabled(!tearSound.enabled);
+      paintSound();
+    });
+
+    const cover = await loadImage(project.pages[0]?.image);
+    await Promise.race([
+      Promise.all([document.fonts.load('800 80px "Manrope"'), document.fonts.load('700 20px "Manrope"')]),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]);
+    if (edition !== current) return;
+    const printed = {
+      title: project.title || project.engineTitle || "Untitled",
+      serial: project.id,
+      pages: project.pages.length,
+      panels: project.panels.length,
+      language: project.source?.language,
+      bound: formatDate(project.updatedAt),
+      warnings: project.warnings.length,
+      cover,
+    };
+
+    if (!webgl) {
+      const flat = drawFront(printed).color;
+      flat.classList.add("edition__flat");
+      flat.setAttribute("role", "img");
+      flat.setAttribute("aria-label", `First edition card for ${printed.title}`);
+      mount(stage, flat);
+      flip.hidden = true;
+      face.hidden = true;
+      tear.addEventListener("click", () => {
+        showSevered(new Array(FIBERS).fill(false));
+        release();
+      });
+      fresh.addEventListener("click", () => {
+        showSevered(new Array(FIBERS).fill(true));
+        tear.hidden = false;
+        fresh.hidden = true;
+        current.section.classList.remove("is-released");
+        detail.textContent = "Tear the stub off to release the PDF.";
+      });
+      return;
+    }
+
+    const { createEdition } = await import("../edition/edition.js");
+    if (edition !== current) return;
+    const controller = createEdition(printed, {
+      still,
+      sound: tearSound,
+      onSnap: showSevered,
+      onRelease: release,
+      onFace: (side) => {
+        face.textContent = side === "front" ? "Front · page one" : "Back · colophon";
+      },
+    });
+    current.controller = controller;
+    mount(stage, controller.element);
+    controller.wake();
+    tear.addEventListener("click", () => controller.tear());
+    flip.addEventListener("click", () => controller.flip());
+    fresh.addEventListener("click", () => {
+      controller.reset();
+      tear.hidden = false;
+      fresh.hidden = true;
+      current.section.classList.remove("is-released");
+      detail.textContent = "A fresh copy. Tear the stub off again to download the PDF once more.";
+    });
+  })().catch((error) => {
+    mount(stage, emptyState("The first edition could not be printed.", error?.message || "Use Download the PDF above instead."));
+  });
+
+  return current.section;
+}
+
+function loadImage(src) {
+  if (!src) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  });
 }

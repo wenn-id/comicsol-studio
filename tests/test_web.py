@@ -268,6 +268,53 @@ class ModuleTests(unittest.TestCase):
             """,
         )
 
+    def test_first_edition_tears_where_it_is_pulled(self) -> None:
+        run_node(
+            self,
+            """
+            import assert from 'node:assert/strict';
+            import { COLS, SEAM_Y, VerletPaper } from './assets/js/console/edition/paper.js';
+            const down = { x: 0, y: -1, z: 0 };
+            function pull(x) {
+              const order = [];
+              let released = 0;
+              const paper = new VerletPaper({ onSnap: (c) => order.push(c), onDetach: () => released++ });
+              const y = SEAM_Y - 0.4;
+              paper.startGrab(x, y, 'pull');
+              for (let f = 0, now = 0; f < 120; f++, now += 16.7) {
+                paper.moveGrab(x, y - Math.min(1, f / 30) * 0.9);
+                paper.step(1 / 60, down, now);
+              }
+              return { order, released };
+            }
+            const right = pull(0.85);
+            assert.ok(right.order[0] >= 20, `a pull on the right starts on the right: ${right.order}`);
+            assert.equal(right.order.length, COLS);
+            assert.equal(right.released, 1);
+            assert.ok(pull(-0.85).order[0] <= 4);
+            const middle = pull(0).order;
+            assert.ok(Math.abs(middle[0] - 12) <= 1);
+            // A torn front only ever grows by a neighbour of an already torn fibre.
+            for (let i = 1; i < middle.length; i++) {
+              const torn = new Set(middle.slice(0, i));
+              assert.ok(torn.has(middle[i] - 1) || torn.has(middle[i] + 1), `fibre ${middle[i]} tore away from the front`);
+            }
+
+            const sliced = [];
+            const paper = new VerletPaper({ onSnap: (c) => sliced.push(c) });
+            assert.equal(paper.sliceBetween(1.2, 0), 13);
+            assert.deepEqual(sliced.slice(0, 3), [24, 23, 22]);
+            assert.equal(paper.sliceBetween(0, -1.2), 12);
+            assert.ok(paper.detached);
+            paper.reset();
+            assert.equal(paper.intactSeamCount, COLS);
+            assert.ok(!paper.detached);
+            // No triangle crosses the seam: 24 cover rows, then 10 stub rows, of 24 quads.
+            assert.equal(paper.bodyIndexCount, 24 * 24 * 6);
+            assert.equal(paper.index.length, 34 * 24 * 6);
+            """,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

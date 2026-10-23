@@ -86,7 +86,8 @@ engine starter), upload your own images, and review them yourself.
   reached only through `engine.py` and only by public names).
 - `test_web.py`: WCAG AA contrast for every text token on every surface in both themes, no
   em dashes, no remote origins or inline scripts, focus rings kept, the book's layouts
-  matching the engine, and the console's pure modules under Node.
+  matching the engine, and the console's pure modules under Node, including the first
+  edition's tear (a pull tears where it is pulled and runs outward along the seam).
 - `test_pages.py`: the Pages preview build rebases every link onto the project path, loads
   the DEMO layer before the app, and leaves the shipped web files untouched.
 
@@ -181,6 +182,11 @@ RHYTHM 2 / MOTION 1.
 - The console is 2D on purpose: forms, filmstrips, and paper sheets, with motion limited to
   state changes. Flat editor sections keep the artwork and next action visible; technical
   lifecycle detail is available in a disclosure. Mobile navigation retains stage names.
+  The one exception is the first edition on Finish: once the PDF is bound, page one is
+  printed on a foil card whose perforated stub holds the PDF. Slicing the seam, pulling the
+  stub, or the button tears it off (Verlet card stock, synthesized tear sound) and downloads
+  the PDF. It renders only while something moves, removes the stub without a fall under
+  reduced motion, and is a flat print without WebGL. It reuses the bundled Three.js build.
 - Both themes share their tokens with the landing; text contrast, control edges and focus
   colors are tested on every main surface. No new UI or Three.js dependency was added.
 - The favicon mark is a placeholder drawn from a page layout; replace it with the official
